@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="author" content="Ashley Peters">
+    <meta name="description" content="">
+    <meta name="author" content="Ashley Peters">
+
+    <!--CSS Stylesheet for index.html-->
+    <link rel="stylesheet" type="text/css" href="./css/style.css">
+    
+    <!--Favicon-->
+    <link rel="icon" type="image/png" href="icons8-earth-globe-16.png">
+
+    <!--Bootstrap CSS-->
+    <link rel="stylesheet" type="text/css" href="./bootstrap-3.4.1-dist/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="./bootstrap-3.4.1-dist/css/bootstrap.css">
+  
+
+    <!--Leaflet CSS-->
+    <link rel="stylesheet" href="./packages/leaflet/leaflet.css" type="text/css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin=""/>
+
+    <!--Easybutton-->
+    <link rel="stylesheet" href="./packages/easybutton/easy-button.css">
+
+
+    <!--FontAwesome Icons-->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+
+    <!--Leaflet.markercluster-->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
+  
+    <!--Spin CSS-->
+  
+    
+
+
+ <title>Gazetteer</title>
+   
+
+</head>
+<body>
+
+  
+
+
+
+  
+  
+  
+ <!-- Div containing map and country select -->
+<div id="dropdown-container">
+    <select class="custom-select" name="country" id="country" onchange="getData(value)" data-target="#Modal" data-toggle="modal" autocomplete="on">
+        <option value="ZZ" selected="selected" >Select Country</option>
+    </select>
+</div>
+<div id="map"></div>
+
+ 
+
+<div class="modal fade" id="wikipedia-modal" tabindex="-1" role="dialog" aria-labelledby="wikipedia-modal-label" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="wikipedia-modal-label">Wikipedia Information</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="wikipediaContent">
+                    <!-- Wikipedia content will be inserted here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a id="wikipedia-full-link" class="btn btn-primary" target="_blank" href="">Read Full Article on Wikipedia</a>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Currency Bootstrap modal -->
+<div class="modal fade" id="currency-modal" tabindex="-1" role="dialog" aria-labelledby="currencyModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="currencyModalLabel">Currency Exchange Rates</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="currency-content">
+                    <!-- Currency exchange rates will be displayed here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+  
+<!-- News Modal -->
+<div class="modal fade" id="news-modal" tabindex="-1" role="dialog" aria-labelledby="news-modal-label" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="news-modal-label">News about the Selected Country</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="news-content">
+                <!-- News content will be inserted here -->
+            </div>
+        </div>
+    </div>
+</div>
+<!--Weather Bootstrap modal-->
+
+  <div id="weather-modal" class="modal fade">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Weather Information</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <img class="weather-icon" src="" alt="Weather Icon">
+                <p class="temperature"></p>
+                <p class="weather-description"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="forecast-modal" tabindex="-1" role="dialog" aria-labelledby="forecastModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="forecastModalLabel">Forecast Data</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="forecast-modal-content">
+                <!-- Forecast data will be displayed here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Population Bootstrap modal -->
+<div class="modal fade" id="population-modal" tabindex="-1" role="dialog" aria-labelledby="populationModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="populationModalLabel">Population Information</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="population-content">
+                <!-- Population data will be displayed here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!--Timezone Modal-->
+
+<div class="modal fade" id="timezone-modal" tabindex="-1" role="dialog" aria-labelledby="timezoneModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="timezoneModalLabel">Timezone Information</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="timezone-modal-content">
+                    <!-- Timezone information will be displayed here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+  
+  
+<!--Scripts-->
+<script type="text/javascript" src="./packages/leaflet/leaflet.js"></script>
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+<script src="./bootstrap-3.4.1-dist/js/bootstrap.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
+<script src="packages/easybutton/easy-button.js"></script>
+<script src="packages/Leaflet_markercluster/dist/leaflet.markercluster.js"></script>
+<script type="text/javascript" src="./js/script.js"></script>
+
+
+
+
+
+
+</body>
+</html>
