@@ -1,14 +1,19 @@
+const selectedCountryCode = $('#country').val();
 var mapContainer = document.getElementById('map');
 var dropdownContainer = document.getElementById('dropdown-container');
 mapContainer.appendChild(dropdownContainer);
+var markers = L.markerClusterGroup();
 
 
 
 
 var map = L.map('map').setView([51.5, -0.1], 2);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+map.addLayer(markers);
 
-L.marker([50.5, -0.3]).addTo(map);
+
+
+
 var countryBordersLayer;
 
 
@@ -37,7 +42,7 @@ $.getJSON('json/countryBorders.geo.json', function(data) {
 
 function highlightSelectedCountry(geojsonData, countryCode) {
     if (countryBordersLayer) {
-        map.removeLayer(countryBordersLayer);
+        map.removeLayer(countryBordersLayer); // Remove the previous country border layer
     }
 
     if (countryCode !== 'ZZ') {
@@ -51,12 +56,31 @@ function highlightSelectedCountry(geojsonData, countryCode) {
                     color: 'blue',
                     weight: 7
                 }
-            }).addTo(map);
+            });
+            // Add the new country borders to the cluster layer
+            map.addLayer(countryBordersLayer);
 
             map.fitBounds(countryBordersLayer.getBounds());
         }
     }
 }
+
+$('#country').on('change', function() {
+    const selectedCountryCode = $(this).val();
+
+    if (countryBordersLayer) {
+        map.removeLayer(countryBordersLayer);
+    }
+
+    updateLocalTime(selectedCountryCode);
+    highlightSelectedCountry(countryGeoJSONData, selectedCountryCode);
+    
+    
+});
+
+
+
+
 
 // navigator.geolocation for users location
 $(document).ready(function() {
@@ -68,9 +92,6 @@ $(document).ready(function() {
     iconSize: [40,40],
     iconAnchor:  [20,40]
 });
-
-
-
 
 
 
@@ -113,49 +134,102 @@ function openWikipediaModal() {
     $('#wikipedia-modal').modal('show');
 }
 
-L.easyButton({
-    id: 'exchange',
-    states: [{
-        icon: 'fas fa-exchange-alt', // Font Awesome class for the icon
-        onClick: function(btn, map) {
-            const selectedCountry = document.getElementById('country').value;
-            fetchCurrencyInfo(selectedCountry).then(currencyData => {
-                const currencyModalContent = document.getElementById('currency-content');
-                currencyModalContent.innerHTML = `<h3>Currency Exchange Rates for ${currencyData.country}</h3>`;
-                
-                for (const currency in currencyData.rates) {
-                    const rate = currencyData.rates[currency];
-                    currencyModalContent.innerHTML += `<p>${currency}: ${rate}</p>`;
+let currencyCodeMappings = {}; 
+
+
+$.getJSON('json/countries.json', function(data) {
+    const countries = data.countries.country;
+    
+    
+    for (const country of countries) {
+        const countryCode = country.countryCode;
+        const currencyCode = country.currencyCode;
+        
+        currencyCodeMappings[countryCode] = currencyCode;
+    }
+    
+    setupCurrencyButton(); // Call the function to set up the currency button after loading the mappings
+});
+
+function setupCurrencyButton() {
+    L.easyButton({
+        id: 'currency',
+        states: [{
+            icon: 'fas fa-dollar-sign', // Font Awesome class for the icon
+            onClick: function(btn, map) {
+                const selectedCountryCode = $('#country').val();
+
+                const selectedCurrencyCode = currencyCodeMappings[selectedCountryCode];
+
+                if (selectedCurrencyCode) {
+                    const currencySettings = {
+                        async: true,
+                        crossDomain: true,
+                        url: `https://currencytick.p.rapidapi.com/live?base=${selectedCurrencyCode}&target=USD&amount=1`,
+                        method: 'GET',
+                        headers: {
+                            'X-RapidAPI-Key': '98f4f2f379msh19589ed57897fa6p119ab6jsn3b9f2cbf5937',
+                            'X-RapidAPI-Host': 'currencytick.p.rapidapi.com'
+                        }
+                    };
+
+                    $.ajax(currencySettings).done(function (response) {
+                        const exchangeRate = response.rate.toFixed(2);
+                        $('#currency-modal-title').text(`Currency Exchange Rate for ${selectedCountryCode}`);
+                        updateCurrencyModalContent(selectedCurrencyCode, exchangeRate);
+                        $('#currency-modal').modal('show');
+                    });
+                } else {
+                    // Handle the case where there's no currency mapping available
+                    console.error(`No currency mapping found for country code ${selectedCountryCode}`);
                 }
-
-                $('#currency-modal').modal('show');
-            }).catch(error => {
-                console.error('Error fetching currency information:', error);
-                const currencyModalContent = document.getElementById('currency-content');
-                currencyModalContent.innerHTML = '<p>Error fetching currency information.</p>';
-                $('#currency-modal').modal('show');
-            });
-        },
-        title: 'Exchange Rates'
-    }]
-}).addTo(map);
-
-function fetchCurrencyInfo(countryCode) {
-    const currencyApiKey = 'cur_live_gU3s5nEls98DluvXlOSZAiSK918QG3JvU31GT4ca';
-    const currencyApiUrl = `https://api.currencyapi.com/v3/latest?apikey=cur_live_gU3s5nEls98DluvXlOSZAiSK918QG3JvU31GT4ca`;
-
-    return fetch(currencyApiUrl)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .catch(error => {
-            console.error('Error fetching currency information:', error);
-            throw error;
-        });
+            },
+            title: 'Currency Exchange'
+        }]
+    }).addTo(map);
 }
+
+function updateCurrencyModalContent(currencyCode, exchangeRate) {
+    $('#currency-content').html(`
+        <div class="currency-conversion">
+            <div class="currency-header">
+                <p>${currencyCode}</p>
+                <div class="amount-control">
+                    <button id="decrease-amount" class="amount-button">-</button>
+                    <span id="currency-amount">1</span>
+                    <button id="increase-amount" class="amount-button">+</button>
+                </div>
+            </div>
+            <p id="converted-amount">1 ${currencyCode} = ${exchangeRate} USD</p>
+        </div>
+    `);
+
+$('#increase-amount').on('click', function() {
+        const currentAmount = parseFloat($('#currency-amount').text());
+        $('#currency-amount').text(currentAmount + 1);
+        updateConvertedAmount(exchangeRate);
+    });
+
+    $('#decrease-amount').on('click', function() {
+        const currentAmount = parseFloat($('#currency-amount').text());
+        if (currentAmount > 1) {
+            $('#currency-amount').text(currentAmount - 1);
+            updateConvertedAmount(exchangeRate);
+        }
+    });
+
+
+    $('#currency-amount').on('input', function() {
+        updateConvertedAmount(exchangeRate);
+    });
+
+   function updateConvertedAmount(exchangeRate) {
+        const amount = parseFloat($('#currency-amount').text());
+        const convertedAmount = (amount * exchangeRate).toFixed(2);
+        $('#converted-amount').text(`${amount} ${currencyCode} = ${convertedAmount} USD`);
+    }
+}
+
 
 L.easyButton({
     id: 'weather',
