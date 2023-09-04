@@ -470,100 +470,127 @@ L.easyButton({
 }).addTo(map);
 
 
-const capitals = {
-    "US":{
-        capital: "Washington"
-    },
-     "GB":{
-    "name": "United Kingdom",
-    "capital": "London",
-    },
-};
- 
 
 
-// Update the fetchWeatherForecastForCapital function
-function fetchWeatherForecastForCapital(countryCode) {
-  const apiKey = '125b0872658e69e8a6508bfacd5bed92';
-  const capitalInfo = capitals[countryCode];
+let jsonData;
+
+function mapWeatherConditionToIcon(conditionCode) {
+  switch (conditionCode) {
+    case '01d':
+      return 'wi-day-sunny'; // Example: clear sky (day)
+    case '01n':
+      return 'wi-night-clear'; // Example: clear sky (night)
+    case '02d':
+      return 'wi-day-cloudy'; // Example: few clouds (day)
+    case '02n':
+      return 'wi-night-alt-cloudy'; // Example: few clouds (night)
+    // Add more condition codes and corresponding icons as needed
+    default:
+      return 'wi-day-sunny'; // Default icon (you can choose any)
+  }
+}
+
+// Load the JSON data and define the fetchWeatherForecastForCapital function
+$.getJSON('json/capital.json', function (data) {
+  // Assign the JSON data to the 'jsonData' variable
+  jsonData = data;
+
+  // Function to fetch weather data for the selected country's capital
+function fetchWeatherForecastForCapital(country) {
+  // Find the corresponding capital city from your JSON data
+  const capitalInfo = jsonData[country];
 
   if (!capitalInfo) {
     console.error('Capital city information not available.');
     return;
   }
 
-  const { capital, lat, lon } = capitalInfo;
+  const apiKey = '43730da43651ec85674aab2e0218fc22'; // Replace with your OpenWeatherMap API key
+  const capital = capitalInfo;
 
-  const apiUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&cnt=1&appid=${apiKey}`;
+  // Use the OpenWeatherMap API to fetch weather data for the capital city
+  const currentWeatherApiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${capital}&appid=${apiKey}`;
+  const forecastApiUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${capital}&appid=${apiKey}`;
 
-  
-  fetch(apiUrl)
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      return response.json();
-    })
-    .then(data => {
-      
-      if (data.list && data.list.length > 0) {
-        const forecast = data.list[0];
-        const temperatureInKelvin = forecast.main.temp;
-        const temperatureInCelsius = (temperatureInKelvin - 273.15).toFixed(2);
-        const description = forecast.weather[0].description;
+  // Fetch current weather data
+  $.getJSON(currentWeatherApiUrl, function (currentWeatherData) {
+    // Parse the current weather data
+    const currentTemperatureInKelvin = currentWeatherData.main.temp;
+    const currentTemperatureInCelsius = (currentTemperatureInKelvin - 273.15).toFixed(2); // Convert to Celsius and round to 2 decimal places
+    const currentDescription = currentWeatherData.weather[0].description;
+    const currentWeatherIcon = mapWeatherConditionToIcon(currentWeatherData.weather[0].icon);
 
-        
-        const modalContent = `
-          <p><strong>Weather in ${capital}:</strong> ${description}, Temperature: ${temperatureInCelsius}°C</p>
-          <!-- Add more weather information as needed -->
+    // Get the current time
+    const currentTime = new Date().getTime() / 1000; // Convert milliseconds to seconds
+
+    // Fetch forecast data
+    $.getJSON(forecastApiUrl, function (forecastData) {
+      // Parse the forecast data
+      const forecastList = forecastData.list;
+      const forecastTimesOfDay = [];
+
+      forecastList.forEach((forecastItem) => {
+        const forecastTimeInSeconds = forecastItem.dt;
+        const timeDifference = forecastTimeInSeconds - currentTime;
+
+        // Only consider times within the next 5 hours
+        if (timeDifference >= 0 && timeDifference <= 18000 && forecastTimesOfDay.length < 5) {
+          const forecastDateTime = new Date(forecastItem.dt_txt);
+          const forecastTime = forecastDateTime.toLocaleTimeString();
+          const forecastTemperatureInKelvin = forecastItem.main.temp;
+          const forecastTemperatureInCelsius = (forecastTemperatureInKelvin - 273.15).toFixed(2); // Convert to Celsius and round to 2 decimal places
+          const forecastDescription = forecastItem.weather[0].description;
+
+          forecastTimesOfDay.push({
+            time: forecastTime,
+            temperature: forecastTemperatureInCelsius,
+            description: forecastDescription,
+          });
+        }
+      });
+
+      // Update the forecast modal content
+      const currentWeatherContent = `
+        <p><strong>Current Weather in ${capital}:</strong> ${currentDescription}, Temperature: ${currentTemperatureInCelsius}°C</p>
+      `;
+
+      let forecastTimesOfDayContent = '<h5>Times of the Day:</h5>';
+      forecastTimesOfDay.forEach((forecast) => {
+        forecastTimesOfDayContent += `
+          <p>${forecast.time}: ${forecast.description}, Temperature: ${forecast.temperature}°C</p>
         `;
-        $('#forecast-modal .modal-body').html(modalContent);
+      });
 
-        
-        $('#forecast-modal').modal('show');
-      } else {
-        console.error('No weather forecast data available.');
-      }
-    })
-    .catch(error => {
-      console.error('Error fetching weather data:', error);
-      $('#forecast-modal .modal-body').html('Error fetching weather data.');
+      const modalContent = currentWeatherContent + forecastTimesOfDayContent;
+
+      $('#forecast-modal .modal-body').html(modalContent);
+
+      // Show the forecast modal
       $('#forecast-modal').modal('show');
     });
+  })
+  .fail(function(jqXHR, textStatus, errorThrown) {
+    console.error('Error fetching weather data:', errorThrown);
+    $('#forecast-modal .modal-body').html('Error fetching weather data.');
+    $('#forecast-modal').modal('show');
+  });
 }
 
-$.getJSON('json/capitals.json', function (capitalData) {
-  if (!capitalData || capitalData.error) {
-    console.error('Failed to load capital data.');
-    return;
-  }
-  
-  capitalData.forEach(country => {
-    capitals[country.iso2] = {
-      capital: country.capital,
-      lat: country.lat,
-      lon: country.lon,
-    };
-  });
-  
-   $('#country').on('change', function () {
-    const selectedCountryCode = $(this).val();
-    fetchWeatherForecastForCapital(selectedCountryCode);
-  });
-});
+  // Your other code here...
 
-// Update the easy button setup
-L.easyButton({
-  id: 'forecast',
-  states: [{
-    icon: 'fas fa-sun',
-    onClick: function (btn, map) {
-       const selectedCountryCode = $('#country').val();
-       fetchWeatherForecastForCapital(selectedCountryCode);
-    },
-    title: 'Weather Forecast',
-  }],
-}).addTo(map);
+  // Update the easy button setup
+  L.easyButton({
+    id: 'forecast',
+    states: [{
+      icon: 'fas fa-sun',
+      onClick: function (btn, map) {
+         const selectedCountryCode = $('#country').val();
+         fetchWeatherForecastForCapital(selectedCountryCode);
+      },
+      title: 'Weather Forecast',
+    }],
+  }).addTo(map);
+});
 
 
 
