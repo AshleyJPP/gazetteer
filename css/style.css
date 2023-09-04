@@ -121,3 +121,96 @@ width: 100%;
     text-align: center;
 }
 
+#countryFlagContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+}
+
+#countryFlag img {
+  width: 200px; /* Change the width to your desired size */
+  height: auto; /* Automatically adjust the height to maintain aspect ratio */
+}
+
+
+.modal-header{
+    text-align: center;
+    font-weight: 700;
+}
+
+.modal-title{
+    font-weight: 700;
+    font-size: 22px;
+    text-align: center;
+}
+
+#countryInfoModal {
+    z-index: 1050;
+    position: absolute;
+    
+   
+    padding-top: 50px; /* Adjust the padding as needed */
+}
+
+#countryInfoModal .modal-content {
+  text-align: center;
+}
+
+#countryInfoModal .modal-footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+
+
+
+
+#countryInfoList{
+    text-align:center;
+    list-style-type: none;
+    padding-right: 40px;
+}
+
+#countrymodaltitle{
+    text-align: center;
+}
+
+#countryFlag {
+  width: 100px; /* Set the desired width */
+  height: auto; /* Automatically adjust the height to maintain aspect ratio */
+}
+
+.spinner {
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-left: 4px solid #3498db;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  animation: spin 1s linear infinite;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.custom-modal {
+  max-width: 80%; /* Adjust the percentage to your desired maximum width */
+}
+
+/* Apply the custom-modal class to your modal dialog */
+.modal-dialog.custom-modal {
+  width: auto;
+}
+
+
+
+
+
