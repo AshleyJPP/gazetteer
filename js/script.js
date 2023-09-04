@@ -1,21 +1,27 @@
-const selectedCountryCode = $('#country').val();
+//global variables
+const selectedCountryCode = $('#country').val().toLowerCase();
 var mapContainer = document.getElementById('map');
 var dropdownContainer = document.getElementById('dropdown-container');
 mapContainer.appendChild(dropdownContainer);
 var markers = L.markerClusterGroup();
+var airportMarkers = L.markerClusterGroup();
+var majorCities = L.markerClusterGroup();
 
 
-
-
+//load map and markers/layers
 var map = L.map('map').setView([51.5, -0.1], 2);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 map.addLayer(markers);
+map.addLayer(airportMarkers);
+map.addLayer(majorCities);
 
 
+var baseLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
+
+//highlight country borders
 
 var countryBordersLayer;
-
 
 $.getJSON('json/countryBorders.geo.json', function(data) {
     var countrySelect = $('#country');
@@ -36,9 +42,14 @@ $.getJSON('json/countryBorders.geo.json', function(data) {
         var selectedCountryCode = $(this).val();
         updateLocalTime(selectedCountryCode);
         highlightSelectedCountry(data, selectedCountryCode);
+        fetchCountryInfo(selectedCountryCode);
+        const flagImg = $('#countryFlag');
+        flagImg.attr('src', `images/flags/${selectedCountryCode}.svg`);
+        $('#countryInfoModal').modal('show');
+        
+        
     });
 });
-
 
 function highlightSelectedCountry(geojsonData, countryCode) {
     if (countryBordersLayer) {
@@ -53,7 +64,7 @@ function highlightSelectedCountry(geojsonData, countryCode) {
         if (selectedCountryFeature) {
             countryBordersLayer = L.geoJSON(selectedCountryFeature, {
                 style: {
-                    color: 'blue',
+                    color: 'green',
                     weight: 7
                 }
             });
@@ -65,19 +76,122 @@ function highlightSelectedCountry(geojsonData, countryCode) {
     }
 }
 
-$('#country').on('change', function() {
-    const selectedCountryCode = $(this).val();
 
-    if (countryBordersLayer) {
-        map.removeLayer(countryBordersLayer);
-    }
 
-    updateLocalTime(selectedCountryCode);
-    highlightSelectedCountry(countryGeoJSONData, selectedCountryCode);
+// Load airport data
+$.getJSON('json/airports.json', function(data) {
+    const airports = data;
+
     
-    
+    $('#country').on('change', function() {
+        const selectedCountryCode = $(this).val();
+        if (countryBordersLayer) {
+            map.removeLayer(countryBordersLayer);
+        }
+
+        updateLocalTime(selectedCountryCode);
+        highlightSelectedCountry(countryGeoJSONData, selectedCountryCode);
+        
+        // Clear existing airport markers from the marker cluster group
+        markers.clearLayers();
+
+        // Filter airports based on the selected country code
+        const airportsInCountry = Object.values(airports).filter(airport => airport.country === selectedCountryCode);
+        
+         const airportIcon = L.icon({
+        iconUrl: '/images/airport.png', 
+        iconSize: [32, 32], 
+        iconAnchor: [16, 32], 
+        popupAnchor: [0, -32]
+    });
+
+
+        // Add markers for airports
+        for (const airport of airportsInCountry) {
+        const airportName = airport.name;
+        const airportCity = airport.city;
+        const airportCountry = airport.country;
+        const airportIataCode = airport.iata;
+        const airportLat = airport.lat;
+        const airportLng = airport.lon;
+
+            
+            const marker = L.marker([airportLat, airportLng], { icon: airportIcon })
+                .bindPopup(`${airportName}, ${airportCity}, ${airportCountry} (${airportIataCode})`)
+                .bindTooltip(airportName, { direction: 'top', permanent: false, opacity: 1 });
+            
+            
+            markers.addLayer(marker);
+        }
+
+        
+        map.addLayer(markers);
+    });
 });
 
+
+
+
+
+
+const customCityIcon = L.icon({
+    iconUrl: 'images/city.png', // Replace with the path to your SVG image
+    iconSize: [32, 32], // Adjust the icon size as needed
+    iconAnchor: [16, 32], // Adjust the icon anchor point if needed
+    popupAnchor: [0, -16], // Adjust the popup anchor point if needed
+});
+
+
+//Add city markers on selected country
+let cityMarkers;
+
+function addCityMarkers(countryCode) {
+    if (!cityMarkers) {
+        cityMarkers = L.markerClusterGroup();
+    } else {
+        cityMarkers.clearLayers();
+    }
+
+    const countryCities = cities.filter(city => city.country === countryCode);
+
+    console.log('Filtered Cities:', countryCities);
+
+    countryCities.forEach(city => {
+        const cityMarker = L.marker([city.lat, city.lng], { icon: customCityIcon });
+        cityMarker.on('mouseover', function(e) {
+      this.bindPopup(city.name).openPopup();
+    });
+    cityMarker.on('mouseout', function(e) {
+      this.closePopup();
+    });
+        
+        cityMarker.bindPopup(city.name);
+        cityMarkers.addLayer(cityMarker);
+    });
+
+    console.log('City Markers:', cityMarkers);
+
+    map.addLayer(cityMarkers);
+}
+
+// Load city data
+let cities;
+
+$.getJSON('json/cities.json', function (cityData) {
+    cities = cityData;
+
+    $('#country').on('change', function () {
+        const selectedCountryCode = $(this).val();
+
+        
+        if (cityMarkers) {
+            map.removeLayer(cityMarkers);
+        }
+
+        
+        addCityMarkers(selectedCountryCode);
+    });
+});
 
 
 
@@ -104,35 +218,145 @@ $.getJSON('json/countryBorders.geo.json', function(data) {
 
 var countryGeoJSONData;
 
+//Country information modal/ easybutton with flag
+
+function fetchCountryInfo(countryCode) {
+  const username = 'ajppeters'; 
+  const apiUrl = `https://secure.geonames.org/countryInfoJSON?formatted=true&lang=en&country=${countryCode}&username=${username}&style=full`;
+
+  $.getJSON(apiUrl, function (data) {
+    if (data.geonames && data.geonames.length > 0) {
+      const countryData = data.geonames[0];
+
+      updateCountryInfoModal(countryData);
+    } else {
+      console.error('No country information data available.');
+    }
+  })
+  .fail(function(jqXHR, textStatus, errorThrown) {
+    console.error('Error fetching country information:', errorThrown);
+  });
+}
+
+function updateCountryInfoModal(countryData) {
+  const modalContent = $('#countryInfoList');
+  modalContent.empty();
+
+  const capital = countryData.capital;
+  const population = countryData.population;
+  const area = countryData.areaInSqKm;
+  const continent = countryData.continentName;
+  const currency = countryData.currencyCode;
+  const isoCode = countryData.countryCode;
+
+  
+  const capitalItem = `<li><strong>Capital:</strong> ${capital}</li>`;
+  const populationItem = `<li><strong>Population:</strong> ${population}</li>`;
+  const areaItem = `<li><strong>Area:</strong> ${area} sq km</li>`;
+  const continentItem = `<li><strong>Continent:</strong> ${continent}</li>`;
+  const currencyItem = `<li><strong>Currency:</strong> ${currency}</li>`;
+  const isoCodeItem = `<li><strong>ISO Code:</strong> ${isoCode}</li>`;
+
+  
+  modalContent.append(capitalItem, populationItem, areaItem, continentItem, currencyItem, isoCodeItem);
+
+  
+  $('#countryInfoModal').modal('show');
+}
+
 L.easyButton({
-    id: 'wikipedia',
-    states: [{
-        icon: 'fas fa-wikipedia-w',
-        onClick: function(btn, map) {
-            const selectedCountry = document.getElementById('country').value;
-            fetchWikipediaInfo(selectedCountry).then(info => {
-                document.getElementById('wikipediaContent').innerHTML = info.extract;
-                document.getElementById('wikipedia-full-link').href = info.fullUrl;
-                $('#wikipedia-modal').modal('show');
-            });
-        },
-        title: 'Wikipedia'
-    }],
-    className: 'custom-easy-button'
+  id: 'country-info',
+  states: [{
+    icon: 'fas fa-info',
+    onClick: function (btn, map) {
+      var selectedCountryCode = $('#country').val();
+      fetchCountryInfo(selectedCountryCode);
+      var selectedCountryName = $('#country option:selected').text();
+      fetchWikipediaSummary(selectedCountryCode);
+      $('#countryInfoModal').modal('show');
+    },
+    title: 'Country Information',
+  }],
 }).addTo(map);
 
-function openWikipediaModal() {
-    // You can fetch Wikipedia content here and then display it in the modal
-    // For demonstration purposes, let's just display a dummy content
 
-    var dummyWikipediaContent = "<h3>Wikipedia Content</h3><p>This is a sample Wikipedia content.</p>";
+function fetchWikipediaSummary(latitude, longitude) {
+    console.log('Fetching Wikipedia summary...');
+  const username = 'ajppeters';
+  const apiUrl = `https://secure.geonames.org/findNearbyWikipediaJSON?lat=${latitude}&lng=${longitude}&username=${username}`;
 
-    // Update the modal content with the fetched Wikipedia content
-    document.getElementById("wikipedia-modal-content").innerHTML = dummyWikipediaContent;
+  return fetch(apiUrl)
+    .then((response) => response.json())
+    .then((data) => {
+        console.log('API Response:', data);
+      
+      const wikipediaEntries = data.geonames;
 
-    // Open the Wikipedia modal
-    $('#wikipedia-modal').modal('show');
+      
+      if (wikipediaEntries.length > 0) {
+        const summary = wikipediaEntries[0].summary;
+        const fullArticleUrl = `https://en.wikipedia.org/wiki/${wikipediaEntries[0].title}`;
+        
+        console.log('Summary:', summary); 
+        console.log('Full Article URL:', fullArticleUrl);
+
+        return { summary, fullArticleUrl }; 
+      } else {
+        console.error('No Wikipedia entries found.');
+        return { summary: '', fullArticleUrl: '' }; 
+      }
+    })
+    .catch((error) => {
+      console.error('Error fetching Wikipedia data:', error);
+      return { summary: '', fullArticleUrl: '' }; 
+    });
 }
+
+// Event handler for dropdown change
+document.getElementById('country').addEventListener('change', function () {
+  const selectedCountryCode = this.value; // Get the selected country code
+
+  
+  $.getJSON('json/countrylatlong.json', function (yourJsonData) {
+    // Find the selected country's coordinates from your JSON data
+    const countryData = yourJsonData.find((country) => country.alpha2 === selectedCountryCode);
+
+    if (countryData) {
+      const { latitude, longitude } = countryData.coordinates;
+         fetchWikipediaSummary(latitude, longitude)
+        .then((data) => {
+          
+          document.getElementById('countrySummary').innerHTML = data.summary;
+          const fullArticleLink = document.getElementById('fullArticleLink');
+          fullArticleLink.href = data.fullArticleUrl;
+          fullArticleLink.style.display = 'block';
+        });
+    } else {
+      console.error('Coordinates not found for the selected country.');
+      document.getElementById('countrySummary').textContent = '';
+      document.getElementById('fullArticleLink').href = '';
+      document.getElementById('fullArticleLink').style.display = 'none';
+    }
+  });
+});
+
+
+function setCountryFlag(countryCode) {
+  const flagImg = new Image();
+  const flagSvgPath = `images/flags/${countryCode}.svg`;
+
+  flagImg.src = flagSvgPath;
+  flagImg.alt = `${countryCode} Flag`;
+  flagImg.width = 50;
+
+  
+  const flagContainer = document.getElementById('countryFlag');
+  flagContainer.innerHTML = '';
+  flagContainer.appendChild(flagImg);
+}
+
+
+//Currency converter modal/ easybutton
 
 let currencyCodeMappings = {}; 
 
@@ -148,14 +372,14 @@ $.getJSON('json/countries.json', function(data) {
         currencyCodeMappings[countryCode] = currencyCode;
     }
     
-    setupCurrencyButton(); // Call the function to set up the currency button after loading the mappings
+    setupCurrencyButton(); 
 });
 
 function setupCurrencyButton() {
     L.easyButton({
         id: 'currency',
         states: [{
-            icon: 'fas fa-dollar-sign', // Font Awesome class for the icon
+            icon: 'fas fa-dollar-sign', 
             onClick: function(btn, map) {
                 const selectedCountryCode = $('#country').val();
 
@@ -180,7 +404,7 @@ function setupCurrencyButton() {
                         $('#currency-modal').modal('show');
                     });
                 } else {
-                    // Handle the case where there's no currency mapping available
+                    
                     console.error(`No currency mapping found for country code ${selectedCountryCode}`);
                 }
             },
@@ -231,117 +455,9 @@ $('#increase-amount').on('click', function() {
 }
 
 
-L.easyButton({
-    id: 'weather',
-    states: [{
-        icon: 'fas fa-cloud-sun', // Font Awesome class for the icon
-        onClick: function(btn, map) {
-            const selectedCountry = document.getElementById('country').value;
-            fetchWeatherInfo(selectedCountry).then(weatherInfo => {
-                updateWeatherModal(weatherInfo);
-                $('#weather-modal').modal('show');
-            });
-        },
-        title: 'Weather Data'
-    }]
-}).addTo(map);
 
 
-function fetchWeatherInfo(countryCode) {
-    var apiKey = '125b0872658e69e8a6508bfacd5bed92';
-    var apiUrl = `https://api.openweathermap.org/data/2.5/weather?units=metric&appid=${apiKey}&q=${countryCode}`;
-
-    return fetch(apiUrl)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            return {
-                temperature: data.main.temp,
-                description: data.weather[0].description,
-                icon: data.weather[0].icon
-            };
-        })
-        .catch(error => {
-            console.error('Error fetching weather information:', error);
-            return {
-                temperature: 'N/A',
-                description: 'Weather data unavailable',
-                icon: '01d'
-            };
-        });
-}
-
-
-function updateWeatherModal(weatherInfo) {
-    var weatherIcon = document.querySelector('.weather-icon');
-    var temperature = document.querySelector('.temperature');
-    var weatherDescription = document.querySelector('.weather-description');
-
-    weatherIcon.src = `https://openweathermap.org/img/wn/${weatherInfo.icon}.png`;
-    temperature.textContent = `Temperature: ${weatherInfo.temperature}°C`;
-    weatherDescription.textContent = `Description: ${weatherInfo.description}`;
-}
-
-
-L.easyButton({
-    id: 'forecast',
-    states: [{
-        icon: 'fas fa-calendar-week', // Font Awesome class for the icon
-        onClick: function(btn, map) {
-            const selectedCountryCode = document.getElementById('country').value;
-            
-            fetchForecastData(selectedCountryCode).done(function(response) {
-                // Handle the forecast data response here
-                // You can update the modal content with the forecast data
-                console.log(response);
-            }).fail(function(jqXHR, textStatus, errorThrown) {
-                console.error('Error fetching forecast data:', errorThrown);
-                // Update modal content with error message
-            });
-
-            $('#forecast-modal').modal('show');
-        },
-        title: 'Forecast Data'
-    }]
-}).addTo(map);
-
-
-function fetchForecastData(selectedCountryCode) {
-    const settings = {
-        async: true,
-        crossDomain: true,
-        url: 'https://ai-weather-by-meteosource.p.rapidapi.com/find_places?text=' + selectedCountryCode + '&language=en',
-        method: 'GET',
-        headers: {
-            'X-RapidAPI-Key': '98f4f2f379msh19589ed57897fa6p119ab6jsn3b9f2cbf5937',
-            'X-RapidAPI-Host': 'ai-weather-by-meteosource.p.rapidapi.com'
-        }
-    };
-
-    return $.ajax(settings);
-}
-
-
-
-
-function updateForecastModal(data) {
-    var forecastContent = $('#forecast-modal-content');
-    forecastContent.empty(); // Clear previous content
-
-
-    data.forEach(function(forecastItem) {
-        var forecastElement = $('<div class="forecast-item">');
-        forecastElement.append('<p>Date: ' + forecastItem.date + '</p>');
-        forecastElement.append('<p>Temperature: ' + forecastItem.temperature + '°C</p>');
-        forecastContent.append(forecastElement);
-    });
-    $('#forecast-modal').modal('show');
-}
-
+//News on country with easybutton
 L.easyButton({
     id: 'news',
     states: [{
@@ -354,23 +470,103 @@ L.easyButton({
 }).addTo(map);
 
 
+const capitals = {
+    "US":{
+        capital: "Washington"
+    },
+     "GB":{
+    "name": "United Kingdom",
+    "capital": "London",
+    },
+};
+ 
 
 
+// Update the fetchWeatherForecastForCapital function
+function fetchWeatherForecastForCapital(countryCode) {
+  const apiKey = '125b0872658e69e8a6508bfacd5bed92';
+  const capitalInfo = capitals[countryCode];
 
-function fetchWikipediaInfo(country) {
-    return fetch(`https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro=1&titles=${country}&origin=*`)
-        .then(response => response.json())
-        .then(data => {
-            const pageId = Object.keys(data.query.pages)[0];
-            const extract = data.query.pages[pageId].extract;
-            const fullUrl = `https://en.wikipedia.org/wiki/${encodeURIComponent(country)}`;
-            return { extract, fullUrl };
-        })
-        .catch(error => {
-            console.error('Error fetching Wikipedia information:', error);
-            return { extract: 'Error fetching Wikipedia information.', fullUrl: '' };
-        });
+  if (!capitalInfo) {
+    console.error('Capital city information not available.');
+    return;
+  }
+
+  const { capital, lat, lon } = capitalInfo;
+
+  const apiUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&cnt=1&appid=${apiKey}`;
+
+  
+  fetch(apiUrl)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    })
+    .then(data => {
+      
+      if (data.list && data.list.length > 0) {
+        const forecast = data.list[0];
+        const temperatureInKelvin = forecast.main.temp;
+        const temperatureInCelsius = (temperatureInKelvin - 273.15).toFixed(2);
+        const description = forecast.weather[0].description;
+
+        
+        const modalContent = `
+          <p><strong>Weather in ${capital}:</strong> ${description}, Temperature: ${temperatureInCelsius}°C</p>
+          <!-- Add more weather information as needed -->
+        `;
+        $('#forecast-modal .modal-body').html(modalContent);
+
+        
+        $('#forecast-modal').modal('show');
+      } else {
+        console.error('No weather forecast data available.');
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching weather data:', error);
+      $('#forecast-modal .modal-body').html('Error fetching weather data.');
+      $('#forecast-modal').modal('show');
+    });
 }
+
+$.getJSON('json/capitals.json', function (capitalData) {
+  if (!capitalData || capitalData.error) {
+    console.error('Failed to load capital data.');
+    return;
+  }
+  
+  capitalData.forEach(country => {
+    capitals[country.iso2] = {
+      capital: country.capital,
+      lat: country.lat,
+      lon: country.lon,
+    };
+  });
+  
+   $('#country').on('change', function () {
+    const selectedCountryCode = $(this).val();
+    fetchWeatherForecastForCapital(selectedCountryCode);
+  });
+});
+
+// Update the easy button setup
+L.easyButton({
+  id: 'forecast',
+  states: [{
+    icon: 'fas fa-sun',
+    onClick: function (btn, map) {
+       const selectedCountryCode = $('#country').val();
+       fetchWeatherForecastForCapital(selectedCountryCode);
+    },
+    title: 'Weather Forecast',
+  }],
+}).addTo(map);
+
+
+
 
 var countryCityMap = {
     US: 'New_York',
@@ -379,37 +575,6 @@ var countryCityMap = {
 };
 
 
-$(document).ready(function() {
-    var populationData;
-
-    $.getJSON('json/population.json', function(data) {
-        populationData = data.data;
-    });
-
-    L.easyButton({
-        id: 'population',
-        states: [{
-            icon: 'fas fa-users',
-            onClick: function(btn, map) {
-                const selectedCountryCode = $('#country').val();
-                const selectedCountry = populationData.find(country => country.code === selectedCountryCode);
-
-                if (selectedCountry) {
-                    const population2018 = selectedCountry.populationCounts.find(entry => entry.year === 2018);
-                    if (population2018) {
-                        $('#population-content').text(`Population in 2018: ${population2018.value}`);
-                    } else {
-                        $('#population-content').text('Population data for 2018 unavailable');
-                    }
-                } else {
-                    $('#population-content').text('Population data unavailable');
-                }
-                $('#population-modal').modal('show');
-            },
-            title: 'Population'
-        }]
-    }).addTo(map);
-});
 
 
 
@@ -470,7 +635,7 @@ function fetchAndDisplayTimezone(lat, lon) {
 L.easyButton({
     id: 'timezone',
     states: [{
-        icon: 'fas fa-clock', // Font Awesome class for the clock icon
+        icon: 'fas fa-clock',
         onClick: function(btn, map) {
             const selectedCountryCode = document.getElementById('country').value;
             fetchAndDisplayTimezone(selectedCountryCode);
@@ -491,20 +656,20 @@ L.easyButton({
 
 function geolocationCallback( position ){
     
-    // Set variable lat and lng for the users current latitude and longitude
+    
     var lat = position.coords.latitude;
     var lng = position.coords.longitude;
 
-    //set variable latlng as the users coordinates using the geolocation function
+    
     var latlng = new L.LatLng(lat, lng);
  
-    //set the starting view of the map as the users location at zoom level 10
+    
     mymap = map.setView(latlng, 8);
 
-    //add a marker to the users position to easily find on a zoomed out map
+    
     L.marker(latlng, {title: 'You are here', icon: pericon}).addTo(map);
 
-    // Get ISO 2 country code using users current position lat and long
+    
     $.ajax({
         url: "php/latlngtocc.php",
         type: 'GET',
@@ -515,13 +680,12 @@ function geolocationCallback( position ){
         },
         success: function(result) {
             
-            // Set users home currency
+            
             homeCurrency = result['data']['currency'];
-            // Send data to functions which will get and display more data from different APIs and set the users local currency
+            
             getData(result['data']['country']); 
         },
-        // Error section uses an error function which  logs to console the error
-        // each error uses this function and has it owns log of where the error is
+        
         error: function(jqXHR, exception){
             errorajax(jqXHR, exception);
             console.log("lat and long to country code");
