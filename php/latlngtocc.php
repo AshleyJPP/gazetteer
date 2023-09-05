@@ -1,14 +1,14 @@
 <?php
 
-    // Echo all errors back to the screen of the browser so PHP can be debugged
+    
     ini_set('display_errors', 'On');
     error_reporting(E_ALL);
 
     $executionStartTime = microtime(true);
 
     // Initialize cURL
-    $lat = urlencode($_REQUEST['42.65']);
-    $lng = urlencode($_REQUEST['1.41']);
+    $lat = urlencode($_REQUEST['lat']);
+    $lng = urlencode($_REQUEST['lng']);
     $apiUrl = 'http://secure.geonames.org/countryCodeJSON?lat=' . $lat . '&lng=' . $lng . '&username=ajppeters';
     $ch = curl_init($apiUrl);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
