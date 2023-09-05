@@ -5,27 +5,26 @@ const dropdown = document.getElementById('countryDropdown');
 
 
 
-// Define a custom style for the GeoJSON borders
+
 var geoJSONStyle = {
-  color: 'green', // Border color
-  weight: 2,    // Border weight
-  opacity: 0.8  // Border opacity
+  color: 'green', 
+  weight: 2,    
+  opacity: 0.8  
 };
 
 document.addEventListener('DOMContentLoaded', function () {
-  // Fetch JSON data from the PHP script to populate the dropdown
-  fetch('php/select.php')
+    fetch('php/select.php')
     .then((response) => response.json())
     .then((result) => {
-      const data = result.data; // Access the 'data' property of the result
+      const data = result.data;
 
-      // Check if data is an array before using forEach
+      
       if (Array.isArray(data)) {
         data.forEach((country) => {
           const option = document.createElement('option');
-          option.value = country.code; // Set the value
-          option.textContent = country.name; // Set the displayed text
-          dropdown.appendChild(option); // Add the option to the dropdown
+          option.value = country.code; 
+          option.textContent = country.name; 
+          dropdown.appendChild(option); 
         });
       } else {
         console.error('Data is not an array:', data);
@@ -39,30 +38,30 @@ document.addEventListener('DOMContentLoaded', function () {
 dropdown.addEventListener('change', function () {
   const selectedCountryCode = this.value;
 
-  // Clear existing GeoJSON layers from the map
+  
   map.eachLayer(function (layer) {
     if (layer instanceof L.GeoJSON) {
       map.removeLayer(layer);
     }
   });
 
-  // Filter the GeoJSON data for the selected country by ISO_A3 code
+  
   const selectedCountryGeoJSON = geoJSONData.features.find((feature) => feature.properties.ISO_A3 === selectedCountryCode);
 
   if (selectedCountryGeoJSON) {
-    // Create a GeoJSON layer with custom style and add it to the map
+   
     const countryLayer = L.geoJSON(selectedCountryGeoJSON, {
       style: geoJSONStyle
     }).addTo(map);
 
-    // Fit the map bounds to the selected country's bounds
+    
     map.fitBounds(countryLayer.getBounds());
   } else {
     console.error('GeoJSON data not found for the selected country:', selectedCountryCode);
   }
 });
 
-// Fetch and store the countries_large.geo.json data
+
 fetch('json/countries_large.geo.json')
   .then((response) => response.json())
   .then((data) => {
@@ -110,19 +109,17 @@ $.ajax({
         lng: longitude
     },
     success: function (result) {
-        // Check if the response is valid JSON
+        
         if (result && result.status && result.status.code === '200') {
-            // Process the data
+            
         } else {
-            // Handle error responses here
             console.error('Error fetching country information:', result.status.description);
-            // Display an error message to the user
+            
         }
     },
     error: function (jqXHR, textStatus, errorThrown) {
-        // Handle network or other errors here
-        console.error('Error fetching country information:', errorThrown);
-        // Display an error message to the user
+      console.error('Error fetching country information:', errorThrown);
+        
     }
 });
 
@@ -162,9 +159,9 @@ L.easyButton({
   states: [{
     icon: 'fas fa-info',
     onClick: function (btn, map) {
-  var selectedOption = $('#countryDropdown option:selected'); // Get the selected option
-  var selectedCountryCode = selectedOption.val(); // Get the value attribute of the selected option
-  var selectedCountryName = selectedOption.text(); // Get the text of the selected option
+  var selectedOption = $('#countryDropdown option:selected'); 
+  var selectedCountryCode = selectedOption.val();
+  var selectedCountryName = selectedOption.text();
   fetchCountryInfo(selectedCountryCode);
   
   $('#countryInfoModal').modal('show');
