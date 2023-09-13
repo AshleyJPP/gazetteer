@@ -5,9 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="author" content="Ashley Peters">
     <meta name="description" content="">
-    <meta name="author" content="Ashley Peters">
-
-    <!--CSS Stylesheet for index.html-->
+    
+    <!--CSS-->
     <link rel="stylesheet" type="text/css" href="./css/style.css">
     
     <!--Favicon-->
@@ -22,99 +21,85 @@
     <link rel="stylesheet" href="./packages/leaflet/leaflet.css" type="text/css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin=""/>
 
-    <!--Easybutton-->
+    <!--Easybutton CSS-->
     <link rel="stylesheet" href="./packages/easybutton/easy-button.css">
 
 
-    <!--FontAwesome Icons-->
+    <!--FontAwesome CSS-->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 
-    <!--Leaflet.markercluster-->
+    <!--Markercluster CSS-->
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
   
-    <!--Spin CSS-->
-  
-    
-
-
- <title>Gazetteer</title>
-   
-
+<title>Gazetteer</title>
 </head>
+
 <body>
 
-  
-
-
-
-  
-  
-  
- <!-- Div containing map and country select -->
+ 
+<!-- Country select -->
 <div id="dropdown-container">
-    <select class="custom-select" name="country" id="countryDropdown" onchange="" data-target="#Modal" data-toggle="modal" autocomplete="on">
+    <select class="custom-select" name="country" id="country" data-target="#Modal" data-toggle="modal" autocomplete="on">
         <option value="ZZ" selected="selected" >Select Country</option>
     </select>
 </div>
+<!--Map Div-->
 <div id="map"></div>
-
-<div id="loadingSpinner" class="spinner" style="display: none;"></div>
+<!--Load spinner-->
+<div class="lds-dual-ring"></div>
 
 
  
 
-<!-- Modal for Country Information -->
-<div id="countryInfoModal" class="modal fade">
-  <div class="modal-dialog modal-lg">
+<!-- Country Information Modal -->
+<div class="modal" id="countryInfoModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Country Information</h4>
+            </div>
+                <div class="modal-body">
+                <strong>Capital:</strong> <span id="capital"></span><br>
+                <strong>Population:</strong> <span id="population"></span><br>
+                <strong>Area (km²):</strong> <span id="area"></span><br>
+                <strong>Continent:</strong> <span id="continent"></span><br>
+                <strong>Currency:</strong> <span id="currency"></span><br>
+                <strong>ISO Code:</strong> <span id="iso"></span><br>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="closeModalBtn" class="btn btn-danger" data-dismiss="modal">Close</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Currency Exchange Modal -->
+
+<div class="modal fade" id="currencyModal" tabindex="-1" role="dialog" aria-labelledby="currencyModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h4 class="modal-title" id="countrymodaltitle">Country Information</h4>
-      </div>
+        <h5 class="modal-title" id="currencyModalLabel">Currency Conversion</h5>
+        </div>
       <div class="modal-body">
-        <!-- Other modal content -->
-        <ul id="countryInfoList">
-          <!-- Data will be inserted here -->
-        </ul>
-        <!-- Display country summary here -->
-        <div id="countrySummary"></div>
-        <!-- Link to the full Wikipedia article -->
-        <a id="fullArticleLink" href="" target="_blank" style="display: none;">Read More</a>
-        <img id="countryFlag" src="" alt="Flag">
+        <div class="input-group mb-3">
+          <span class="input-group-text">Amount in GBP</span>
+          <input type="number" id="gbpAmount" class="form-control" value="1" min="0">
+          <button class="btn btn-outline-primary" id="decreaseAmount">-</button>
+          <button class="btn btn-outline-primary" id="increaseAmount">+</button>
+        </div>
+        <div id="currencyModalBody">
+        </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" id="closeModalBtn2" class="btn btn-danger" data-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Currency Bootstrap modal -->
-<div class="modal fade" id="currency-modal" tabindex="-1" role="dialog" aria-labelledby="currencyModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="currencyModalLabel">Currency Exchange Rates</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div id="currency-content">
-                    <div class="amount-control">
-                <button id="decrease-amount">-</button>
-                <input type="number" id="currency-amount" value="1" min="1">
-                <button id="increase-amount">+</button>
-            </div>
-                    <!-- Currency exchange rates will be displayed here -->
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
   
 <!-- News Modal -->
 <div class="modal fade" id="news-modal" tabindex="-1" role="dialog" aria-labelledby="news-modal-label" aria-hidden="true">
@@ -122,99 +107,49 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="news-modal-label">News about the Selected Country</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
             </div>
-            <div class="modal-body" id="news-content">
-                <!-- News content will be inserted here -->
-            </div>
-        </div>
-    </div>
-</div>
-<!--Weather Bootstrap modal-->
-
-  <div id="weather-modal" class="modal fade">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Weather Information</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <img class="weather-icon" src="" alt="Weather Icon">
-                <p class="temperature"></p>
-                <p class="weather-description"></p>
+            <div class="modal-body" id="newsList">
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-            </div>
+        <button type="button" id="closeModalBtn3" class="btn btn-danger" data-dismiss="modal">Close</button>
+      </div>
         </div>
     </div>
 </div>
 
-
-<div class="modal fade" id="forecast-modal" tabindex="-1" role="dialog" aria-labelledby="forecastModalLabel" aria-hidden="true">
+<!-- Flag Modal -->
+<div class="modal fade" id="flagModal" tabindex="-1" role="dialog" aria-labelledby="flagModalLabel" aria-hidden="true">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="forecastModalLabel">Weather Forecast</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
+        <div class="modal-header">
+                <h5 class="modal-title" id="flag">Country Flag</h5>
+            </div>
       <div class="modal-body">
-        <!-- Forecast content will go here -->
+        <div id="flagContainer" class="text-center">
+          <img id="countryFlagImg" src="" alt="Country Flag" style="width: 200px; height: auto;">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="closeModalBtn4" class="btn btn-danger" data-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
 </div>
 
 
-
+<!--Weather Bootstrap modal-->
 <!--Timezone Modal-->
 
-<div class="modal fade" id="timezone-modal" tabindex="-1" role="dialog" aria-labelledby="timezoneModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="timezoneModalLabel">Timezone Information</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div id="timezone-modal-content">
-                    <!-- Timezone information will be displayed here -->
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
 
-  
-  
 <!--Scripts-->
 <script type="text/javascript" src="./packages/leaflet/leaflet.js"></script>
-<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.4.1.js" integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU=" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
 <script src="./packages/bootstrap/js/bootstrap.min.js"></script>
 <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
 <script src="packages/easybutton/easy-button.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.4.1/leaflet.markercluster.js"></script>
 <script type="text/javascript" src="./js/script2.js"></script>
-
-
-
-
-
-
-
 
 </body>
 </html>
