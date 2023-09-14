@@ -15,12 +15,12 @@ if ($countryInfoData === false) {
     $countryInfoResult = json_decode($countryInfoData, true);
 
     if (json_last_error() === JSON_ERROR_NONE) {
-        $countryInfo = $countryInfoResult['geonames'][0]; // Adjust this as per the actual structure of the response
+        $countryInfo = $countryInfoResult['geonames'][0];
 
         $output['status']['code'] = "200";
         $output['status']['name'] = "ok";
         $output['status']['description'] = "success";
-        $output['data'] = $countryInfo; // Sending all the country info
+        $output['data'] = $countryInfo;
     } else {
         $output['status']['code'] = "500";
         $output['status']['name'] = "internal server error";
