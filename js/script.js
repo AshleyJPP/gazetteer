@@ -225,6 +225,7 @@ L.easyButton('<i class="fas fa-info-circle" style="color: #3a76df;"></i>', funct
     }
 }, 'Get Country Info').addTo(mymap);
 
+
 $('#countryInfoModal').on('hidden.bs.modal', function () {
     $('.modal-backdrop-show').remove();
 });
@@ -481,7 +482,6 @@ function fetchNewsForCountry() {
         }
     });
 }
-
 
 L.easyButton({
     id: 'open-news-btn',
