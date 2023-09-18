@@ -26,7 +26,7 @@
 
 
     <!--FontAwesome CSS-->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
     <!--Markercluster CSS-->
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
@@ -44,10 +44,14 @@
         <option value="ZZ" selected="selected" >Select Country</option>
     </select>
 </div>
+
 <!--Map Div-->
 <div id="map"></div>
-<!--Load spinner-->
-<div class="lds-dual-ring"></div>
+
+<!--Loading spinner-->
+
+    <div class="lds-dual-ring"></div>
+    
 
 
  
@@ -59,18 +63,21 @@
             <div class="modal-header">
                 <h4 class="modal-title">Country Information</h4>
             </div>
-                <div class="modal-body">
+            <div class="modal-body">
                 <strong>Capital:</strong> <span id="capital"></span><br>
                 <strong>Population:</strong> <span id="population"></span><br>
                 <strong>Area (km²):</strong> <span id="area"></span><br>
-                <strong>Continent:</strong> <span id="continent"></span><br>
+                <strong>Continent:</strong> <span id="continentName"></span><br>
                 <strong>Currency:</strong> <span id="currency"></span><br>
                 <strong>ISO Code:</strong> <span id="iso"></span><br>
+                <br>
+                <br>
+                <p id="wikiSummary"></p>
+                <a href="#" target="_blank" id="wikiLink">Read the full article</a>
             </div>
             <div class="modal-footer">
                 <button type="button" id="closeModalBtn" class="btn btn-danger" data-dismiss="modal">Close</button>
             </div>
-
         </div>
     </div>
 </div>
@@ -137,8 +144,78 @@
 </div>
 
 
-<!--Weather Bootstrap modal-->
+<!-- Weather Forecast Modal -->
+<div class="modal" id="weatherModal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content weather-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Forecast</h4>
+            </div>
+            <div class="modal-body">
+                <!-- Current Weather -->
+                <div class="weather-block" id="currentWeatherBlock">
+                    <div id="currentWeather">
+                        <span id="weatherDescription">Cloudy</span>
+                        <span id="currentTemp">23°C</span>
+                         <img src="" alt="Weather Icon" id="currentWeatherIcon">
+                         </div>
+                </div>
+
+                <!-- Hourly Forecast -->
+                <div class="row" id="hourlyForecast">
+    <div class="col weather-block" id="hourlyForecastBlock1">
+        <!-- Hourly forecast for first hour will be dynamically generated -->
+    </div>
+    <div class="col weather-block" id="hourlyForecastBlock2">
+        <!-- Hourly forecast for second hour will be dynamically generated -->
+    </div>
+    <div class="col weather-block" id="hourlyForecastBlock3">
+        <!-- Hourly forecast for third hour will be dynamically generated -->
+    </div>
+</div>
+
+                <!-- Daily Forecast -->
+<div class="row" id="dailyForecast">
+    <div class="col-6 weather-block" id="dailyForecastBlock1">
+        <!-- Daily forecast for first day will be dynamically generated -->
+    </div>
+    <div class="col-6 weather-block" id="dailyForecastBlock2">
+        <!-- Daily forecast for second day will be dynamically generated -->
+    </div>
+</div>
+                
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="closeWeatherModalBtn" class="btn btn-danger" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+
+
+
+
 <!--Timezone Modal-->
+<div class="modal fade" id="timezoneModal" tabindex="-1" role="dialog" aria-labelledby="timezoneModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="timezoneModalLabel">Timezone Information</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Local Time: <span id="localTime"></span></p>
+        <p>GMT Offset: <span id="gmtOffset"></span></p>
+        </div>
+        <div class="modal-footer">
+        <button type="button" id="closeModalBtn5" class="btn btn-danger" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+    </div>
+  </div>
+
 
 
 <!--Scripts-->
