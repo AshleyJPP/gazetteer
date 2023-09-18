@@ -15,33 +15,20 @@ html, body {
     z-index: 1000; 
 }
 
+#country option {
+    text-align: center;
+}
+
 #country {
-    width: 250px; /* Adjust the width as needed */
+    width: 250px;
     font-size: 22px;
     height: 28px;
-    font-family: Courier New, Monospace;
+    font-family: Monaco, Monospace;
 }
 
 #country-dropdown-container {
     z-index: 1000; 
 }
-
-#myModal{
-  z-index: 1050;
-  position: absolute;
-  padding-top: 150px;
-  
-}
-
-
-
-#newsModal{
-  background-image: url(../packages/fontawesome/newspaper.png);
-  background-repeat: no-repeat;
-  background-position: center;
-  display: none;
-}
-
 
 .controls {
   position: fixed;
@@ -58,61 +45,17 @@ html, body {
 
 }
 
-
 #map {
 height: 100%;
 width: 100%;
   
 }
 
-
-
-
-  .modal-backdrop {
-    display: none;
-    z-index: 1040 !important;
-}
-
 .modal-content {
     margin: 2px auto;
     z-index: 1100 !important;
-}
-
-.currency-conversion {
-    text-align: center;
-    padding: 15px;
-}
-
-#currency-modal .currency-conversion {
-    padding-top: 50px;
-    font-size: 22px; /* Change this value to your desired font size */
-}
-
-#currency-modal .currency-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-weight:bold;
-    margin-bottom: 10px;
-    font-size: 22px;
-}
-
-#currency-modal .amount-control {
-    display: flex;
-    align-items: center;
-}
-
-#currency-modal .amount-button {
-    background-color: #007bff;
-    color: #fff;
-    border: none;
-    padding: 5px 10px;
-    cursor: pointer;
-}
-
-#currency-modal  #currency-amount {
-    margin: 0 10px;
-    font-size: 22px;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px white;
     
 }
 
@@ -130,28 +73,24 @@ width: 100%;
 }
 
 .modal-title {
-    flex: 1; /* Take all available space */
+    flex: 1; 
     text-align: center;
 }
 
-
-
 .modal-header .modal-title {
     order: 1;  
-    font-weight: 700;/* Ensure the title is in the center */
+    font-weight: 700;
 }
 
 .modal-header .close {
-    order: 2;                /* Ensure the close button is on the right */
-    margin-left: auto;       /* Push the close button to the edge */
+    order: 2;               
+    margin-left: auto;       
 }
 
 #countryInfoModal {
     z-index: 1050;
     position: absolute;
-    
-   
-    padding-top: 50px; /* Adjust the padding as needed */
+    padding-top: 50px; 
 }
 
 #countryInfoModal .modal-content {
@@ -162,29 +101,6 @@ width: 100%;
   display: flex;
   justify-content: center;
   margin-top: 10px;
-}
-
-#countryInfoList{
-    text-align:center;
-    list-style-type: none;
-    padding-right: 40px;
-}
-
-#countrymodaltitle{
-    text-align: center;
-}
-
-.custom-modal {
-  max-width: 80%; /* Adjust the percentage to your desired maximum width */
-}
-
-/* Apply the custom-modal class to your modal dialog */
-.modal-dialog.custom-modal {
-  width: auto;
-}
-
-#currencyConverterModal {
-    z-index: 2000; /* This value can be adjusted as needed */
 }
 
 .lds-dual-ring {
@@ -219,18 +135,6 @@ width: 100%;
     }
 }
 
-.loading-overlay {
-    display: none;
-    position: absolute; 
-    top: 0; 
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.2);  /* Black with 50% opacity */
-    z-index: 1500; /* Should be higher than map's z-index to overlay on top */
-}
-
-
 #news-modal #newsList h2 {
     font-size: 16px;
     text-align: center;
@@ -241,14 +145,144 @@ width: 100%;
     display: block;
     font-size: 12px;
     text-align: center;
-    /* or whatever size you desire */
-}
+    }
 
 #countryFlagImg {
-    width: 50px;  /* Set the desired width */
-    height: auto;  /* Maintain aspect ratio */
+    width: 50px;  
+    height: auto;  
+}
+
+.easy-button-button .button-state {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.easy-button-button {
+    width: 25px;  
+    height: 25px; 
+}
+
+.easy-button-button .fa {
+    font-size: 12px; 
+    line-height: 25px;
+}
+
+#wikiLink {
+    display: none;
+}
+
+.weather-content .modal-body {
+    gap: 20px;
+}
+
+.modal-body strong {
+    font-weight: bold;
+}
+
+.modal-body span {
+    font-weight: normal;
+}
+
+#wikiSummary{
+    font-weight: normal;
+}
+
+#currentWeather {
+    display: flex;
+    align-items: center;
+    font-size: 2em;
+}
+
+#currentWeather span {
+    margin-right: 15px; /* Adjust the value to your liking */
+}
+
+#currentWeather #currentWeatherIcon {
+    width: 50px; 
+    height: auto;
+}
+
+#currentWeatherBlock {
+    grid-column: 1 / 4;  /* Span all 3 columns */
+    padding: 15px;
+    font-size: 1.5em; /* Makes the text bigger */
+}
+
+#currentWeatherBlock, #hourlyForecastBlock {
+    border-bottom: 2px solid #000;
+}
+
+.weather-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 15px;
+}
+
+#hourlyForecastBlock, #dailyForecastBlock {
+    padding: 15px;
+}
+
+#hourlyForecastBlock {
+    grid-column: 2 / 3;
+    grid-row: 1 / 2;
+}
+
+#dailyForecastBlock1 {
+    grid-column: 2 / 4;
+    grid-row: 2 / 3;
+}
+
+#dailyForecastBlock2 {
+    grid-column: 2 / 4;
+    grid-row: 2 / 3;
 }
 
 
+.hour, .day {
+    flex: 1;
+    text-align: center;
+}
+
+#currentWeather {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+#currentWeather img {
+    width: 50px;
+}
+
+#weatherModal .weather-content {
+    
+    background-size: cover;
+    color: black;
+}
+
+#dailyForecast .col-6 {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 15px;
+    border-top: 2px solid #000;
+}
+
+#timezoneModal .modal-body {
+    text-align: center;
+}
 
 
+.easy-button-container {
+    border: 8px solid #000;
+    margin: 2px;    
+}
+
+.modal-backdrop {
+    display: none !important;
+    opacity: 0 !important;
+}
