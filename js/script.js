@@ -151,13 +151,12 @@ function highlightCountry(isoCode) {
     }
 }
 
-//Country information/ Wiki article easybutton and modal
-let currentArticleIndex = 0;
-
+//Country Information easybutton and modal, including wikipedia article summary
 function getCountryInfo(iso2) {
     let apiUrl = `http://secure.geonames.org/countryInfo?country=${iso2}&username=ajppeters`;
     $(".lds-dual-ring").show();
-        $.ajax({
+
+    $.ajax({
         url: apiUrl,
         type: 'GET',
         dataType: 'xml',
@@ -170,29 +169,32 @@ function getCountryInfo(iso2) {
             let currency = country.find('currencyCode').text();
             let isoCode = country.find('fipsCode').text();
 
-            let lat = (parseFloat(country.find('north').text()) + parseFloat(country.find('south').text())) / 2;
-            let lng = (parseFloat(country.find('east').text()) + parseFloat(country.find('west').text())) / 2;
+            let wikiSearchUrl = `http://secure.geonames.org/wikipediaSearch?q=${capital}&maxRows=1&username=ajppeters`;
+
+            let north = country.find('north').text();
+            let south = country.find('south').text();
+            let east = country.find('east').text();
+            let west = country.find('west').text();
+            let lat = (parseFloat(north) + parseFloat(south)) / 2;
+            let lng = (parseFloat(east) + parseFloat(west)) / 2;
 
             getTimezoneInfo(lat, lng, function(timezoneData) {
                 $.ajax({
-                    url: `/php/wikipedia.php?lat=${lat}&lng=${lng}`,
+                    url: wikiSearchUrl,
                     type: 'GET',
-                    dataType: 'json',
+                    dataType: 'xml',
                     success: function(wikiData) {
-    if (wikiData && wikiData.entry && wikiData.entry.length > 0) {
-        if (currentArticleIndex >= wikiData.entry.length) {
-            currentArticleIndex = 0;
-        }
-        const article = wikiData.entry[currentArticleIndex];
-        $('#wikiSummary').text(article.summary);
-        $('#wikiLink').attr('href', article.wikipediaUrl).show();("Read the full article");
+                        let entry = $(wikiData).find('entry:first');
+                        if (entry) {
+                            $('#wikiSummary').text(entry.find('summary').text());
+                            $('#wikiLink').attr('href', `https://${entry.find('wikipediaUrl').text()}`).text("Read the full article");
+                            $('#wikiLink').show();
+                        } else {
+                            $('#wikiSummary').text("No Wikipedia summary available for this country.");
+                            $('#wikiLink').hide();
+                        }
 
-        currentArticleIndex++;
-
-    } else {
-        $('#wikiSummary').text("No Wikipedia summary available for this location.");
-        $('#wikiLink').hide();
-    }
+                        // Populate other details
                         $('#localTime').text(timezoneData.formatted);
                         $('#gmtOffset').text(timezoneData.gmtOffset);
                         $('#capital').text(capital);
