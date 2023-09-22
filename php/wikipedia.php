@@ -3,7 +3,7 @@
 $lat = $_GET['lat'];
 $lng = $_GET['lng'];
 
-$url = "http://api.geonames.org/findNearbyWikipedia?lat={$lat}&lng={$lng}&username=ajppeters"; // Replace "demo" with your actual username
+$url = "http://api.geonames.org/findNearbyWikipedia?lat={$lat}&lng={$lng}&username=ajppeters"; 
 
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, $url);
