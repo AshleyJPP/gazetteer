@@ -2,23 +2,41 @@
 selectedCountryISO2 = $(this).find(':selected').data('iso2');
 var markers = L.markerClusterGroup();
 
-//Custom marker icons
-var cityIcon = L.icon({
-    iconUrl: 'images/cityMarker.png',
-    iconSize: [32, 32], 
-    iconAnchor: [16, 16], 
-    popupAnchor: [0, -12]
+document.addEventListener("DOMContentLoaded", function() {
+    const initialLoader = document.querySelector('#initialLoader');
+    if (initialLoader) {
+        initialLoader.style.display = 'flex';
+    }
+
+    setTimeout(function() {
+        if (initialLoader) {
+            initialLoader.style.display = 'none';
+        }
+    }, 2000);
 });
 
-var airportIcon = L.icon({
-    iconUrl: '/images/airport3.png',
-    iconSize: [32, 32],
-    iconAnchor: [16, 16],
-    popupAnchor: [0, -12]
+
+
+//Custom marker icons
+var cityIcon = L.ExtraMarkers.icon({
+    prefix: 'fa',
+  icon: 'fa-city',
+  markerColor: 'green',
+  shape: 'square'
 });
+
+
+var airportIcon = L.ExtraMarkers.icon({
+    icon: 'fa-plane',
+    markerColor: 'blue', 
+    shape: 'circle',
+    prefix: 'fa',
+    iconColor: 'black'
+});
+
 
 var earthquakeIcon = L.icon({
-    iconUrl: '/images/equake.png',
+    iconUrl: '/project1/images/equake.png',
     iconSize: [32, 32],
     iconAnchor: [16, 16],
     popupAnchor: [0, -12]
@@ -57,7 +75,7 @@ var baseLayers = {
 
 //Map pin for users location
 var pericon = L.icon({
-    iconUrl: 'images/location.png',
+    iconUrl: '/project1/images/location.png',
     iconSize: [32,32],
     iconAnchor:  [20,40]
 });
@@ -81,7 +99,7 @@ function geolocationCallback(position) {
 
      $.get(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`, function(data) {
         if (data && data.address && data.address.country_code) {
-            selectedCountryISO2 = data.address.country_code.toUpperCase(); // Update global variable
+            selectedCountryISO2 = data.address.country_code.toUpperCase();
             let userISO3Code = $('#country option[data-iso2="'+ selectedCountryISO2 +'"]').val();
 
             if(userISO3Code) {
@@ -94,7 +112,7 @@ function geolocationCallback(position) {
 //To populate the dropdown with country list
 $(document).ready(function() {
     $.ajax({
-        url: "/php/select.php",
+        url: "/project1/php/select.php",
         type: 'POST',
         dataType: 'json',
         success: function(result) {
@@ -111,7 +129,7 @@ $(document).ready(function() {
 
 let countryBorders;
 
-$.getJSON('/json/countryBorders.geo.json', function(data) {
+$.getJSON('/project1/json/countryBorders.geo.json', function(data) {
     countryBorders = data;
 });
 
@@ -168,49 +186,46 @@ function getCountryInfo(iso2) {
             let continent = country.find('continentName').text();
             let currency = country.find('currencyCode').text();
             let isoCode = country.find('fipsCode').text();
+            let iso3 = country.find('isoAlpha3').text();
+            let postalCode = country.find('postalCodeFormat').text();
+            let languages = country.find('languages').text();
 
             let wikiSearchUrl = `http://secure.geonames.org/wikipediaSearch?q=${capital}&maxRows=1&username=ajppeters`;
 
-            let north = country.find('north').text();
-            let south = country.find('south').text();
-            let east = country.find('east').text();
-            let west = country.find('west').text();
-            let lat = (parseFloat(north) + parseFloat(south)) / 2;
-            let lng = (parseFloat(east) + parseFloat(west)) / 2;
+            population = numberWithCommas(population);
 
-            getTimezoneInfo(lat, lng, function(timezoneData) {
-                $.ajax({
-                    url: wikiSearchUrl,
-                    type: 'GET',
-                    dataType: 'xml',
-                    success: function(wikiData) {
-                        let entry = $(wikiData).find('entry:first');
-                        if (entry) {
-                            $('#wikiSummary').text(entry.find('summary').text());
-                            $('#wikiLink').attr('href', `https://${entry.find('wikipediaUrl').text()}`).text("Read the full article");
-                            $('#wikiLink').show();
-                        } else {
-                            $('#wikiSummary').text("No Wikipedia summary available for this country.");
-                            $('#wikiLink').hide();
-                        }
-
-                        // Populate other details
-                        $('#localTime').text(timezoneData.formatted);
-                        $('#gmtOffset').text(timezoneData.gmtOffset);
-                        $('#capital').text(capital);
-                        $('#population').text(population);
-                        $('#area').text(area);
-                        $('#continentName').text(continent);
-                        $('#currency').text(currency);
-                        $('#iso').text(isoCode);
-                        $(".lds-dual-ring").hide();
-                        $('#countryInfoModal').modal('show');
-                    },
-                    error: function(error) {
-                        $(".lds-dual-ring").hide();
-                        console.error("Error fetching Wikipedia data:", error);
+            $.ajax({
+                url: wikiSearchUrl,
+                type: 'GET',
+                dataType: 'xml',
+                success: function(wikiData) {
+                    let entry = $(wikiData).find('entry:first');
+                    if (entry) {
+                        $('#wikiSummary').text(entry.find('summary').text());
+                        $('#wikiLink').attr('href', `https://${entry.find('wikipediaUrl').text()}`).text("Read the full article");
+                        $('#wikiLink').show();
+                    } else {
+                        $('#wikiSummary').text("No Wikipedia summary available for this country.");
+                        $('#wikiLink').hide();
                     }
-                });
+
+                    $('#capital').text(capital);
+                    $('#population').text(population);
+                    $('#area').text(area);
+                    $('#continentName').text(continent);
+                    $('#currency').text(currency);
+                    $('#iso').text(isoCode);
+                    $('#iso3Code').text(iso3);
+                    $('#postalCodeFormat').text(postalCode);
+                    $('#languages').text(languages);
+                    $(".lds-dual-ring").hide();
+                    $('#countryInfoFlag').attr('src', `https://ajppeters.com/project1/images/flags/${iso2}.svg`);
+                    $('#countryInfoModal').modal('show');
+                },
+                error: function(error) {
+                    $(".lds-dual-ring").hide();
+                    console.error("Error fetching Wikipedia data:", error);
+                }
             });
         },
         error: function(error) {
@@ -220,12 +235,20 @@ function getCountryInfo(iso2) {
     });
 }
 
+
+
+
+function numberWithCommas(x) {
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
 L.easyButton('<i class="fas fa-info-circle" style="color: #3a76df;"></i>', function(btn, map) {
     let iso2 = $('#country').find('option:selected').data('iso2');
     if (iso2) {
         getCountryInfo(iso2);
     }
 }, 'Get Country Info').addTo(mymap);
+
 
 
 $('#countryInfoModal').on('hidden.bs.modal', function () {
@@ -244,9 +267,6 @@ $(document).ready(function() {
     
     $('#closeModalBtn3').on('click', function() {
         $('#news-modal').modal('hide');
-    });
-    $('#closeModalBtn4').on('click', function() {
-        $('#flagModal').modal('hide');
     });
     $('#closeModalBtn5').on('click', function() {
         $('#timezoneModal').modal('hide');
@@ -268,7 +288,7 @@ function getCurrencyConversion(amount) {
         $(".loading-overlay").show();
 
         $.ajax({
-            url: "/php/currencyConverter.php",
+            url: "/project1/php/currencyConverter.php",
             type: "GET",
             data: {
                 countryCode: countryCode,
@@ -339,7 +359,7 @@ let cityMarkers = L.layerGroup().addTo(mymap);
 
 function fetchCitiesAndAddMarkers(countryISO2) {
         $.ajax({
-        url: "/php/fetchCities.php",
+        url: "/project1/php/fetchCities.php",
         type: "GET",
         data: { countryISO2: countryISO2 },
         dataType: "json",
@@ -375,7 +395,7 @@ var airportMarkers = L.markerClusterGroup();
 
 function fetchAirportsAndAddMarkers(countryISO2) {
     $.ajax({
-        url: "/php/fetchAirports.php",
+        url: "/project1/php/fetchAirports.php",
         type: "GET",
         data: { countryISO2: countryISO2 },
         dataType: "json",
@@ -410,7 +430,7 @@ mymap.addLayer(earthquakeMarkers);
 
 function fetchEarthquakesForCountry(countryISO2) {
     $.ajax({
-        url: "/php/fetchEarthquakes.php",
+        url: "/project1/php/fetchEarthquakes.php",
         type: "GET",
         data: { countryISO2: countryISO2 },
         dataType: "json",
@@ -446,85 +466,59 @@ function fetchEarthquakesForCountry(countryISO2) {
 }
 
 
-
-//Local news easybutton and modal
-function fetchNewsForCountry() {
-    let countryISO2 = $('#country').find(':selected').data('iso2');
-
-    $(".lds-dual-ring").show();
-    $(".loading-overlay").show();
-
+function fetchNewsForCountry(countryIso) {
+    
     $.ajax({
-        url: 'php/fetchNews.php',
+        url: "/project1/php/fetchNews.php",
         type: 'GET',
-        data: { country: countryISO2 },
+        data: { country: countryIso },
         dataType: 'json',
         success: function(data) {
+            let newsHtml = '';
+            if (data.results && data.results.length) {
+    data.results.slice(0, 5).forEach(function(article) {
+        const imageUrl = article.image_url || "path/to/your/placeholder-image.jpg";
+
+        newsHtml += `
+            <div class="news-item d-flex align-items-start">
+                ${article.image_url ? `<img src="${imageUrl}" alt="${article.title}" class="news-thumbnail me-3">` : ''}
+                <div>
+                    <h4 class="news-headline">${article.title}</h4>
+                    <a href="${article.link}" target="_blank" class="view-link">View full article</a>
+                </div>
+            </div>
+        `;
+    });
+} else {
+    newsHtml = '<p>No news articles available.</p>';
+}
+            $('#newsModalBody').html(newsHtml);
+            $('#newsModal').modal('show');
             $(".lds-dual-ring").hide();
-            $("#loadingOverlay").hide();
-
-            if (data && data.data) {
-                let newsList = $('#newsList');
-                newsList.empty();
-
-                for (let i = 0; i < 5 && i < data.data.length; i++) {
-                    let news = data.data[i];
-                    newsList.append('<h2>' + news.title + '</h2><a href="' + news.link + '" target="_blank">Read Full Article</a><hr>');
-                }
-
-                $('#news-modal').modal('show');
-            } else {
-                console.error("Unexpected data format:", data);
-            }
-        },
-        error: function(jqXHR, textStatus, errorThrown) {
-            $(".lds-dual-ring").hide();
-            $("#loadingOverlay").hide();
-            alert("News Fetch Error: " + textStatus + " " + errorThrown + "\nResponse: " + jqXHR.responseText);
+            },
+        error: function(error) {
+            console.error("Error fetching news data:", error);
         }
     });
 }
 
-L.easyButton({
-    id: 'open-news-btn',
-    position: 'topleft',
-    type: 'replace',
-    leafletClasses: true,
-    states: [{
-        stateName: 'get-news',
-        onClick: function(control) {
-            fetchNewsForCountry();
-        },
-        title: 'Get News',
-        icon: '<i class="fa-regular fas fa-newspaper" style="color: #000000;"></i>'
-    }]
-}).addTo(mymap);
-
-
-//Selected countries flag easybutton and modal
-function showFlag(iso2) {
-    $('#countryFlagImg').attr('src', `https://ajppeters.com/images/flags/${iso2}.svg`);
-    $('#flagModal').modal('show');
+L.easyButton('<i class="fas fa-newspaper" style="color: #3a76df;"></i>', function(btn, map) {
+    $(".lds-dual-ring").show();
+    let countryIso = $('#country').find('option:selected').data('iso2');
+    if (countryIso) {
+        fetchNewsForCountry(countryIso);
     }
-
-L.easyButton('<i class="fa-regular fa-flag" style="color: #d50b0b;"></i>', function(btn, map) {
-    if (selectedCountryISO2) {
-        showFlag(selectedCountryISO2);
-    } else {
-        console.log("Country not selected yet");
-    }
-}).addTo(mymap);
+    }, 'Get News').addTo(mymap);
 
 
 //Selected country weather forecast easybutton and modal
-function fetchWeather(lat, lon) {
+function fetchWeatherForCity(city) {
     $.ajax({
-        url: '/php/fetchWeather.php',
+        url: '/project1/php/fetchWeatherByCity.php',
         type: 'GET',
         dataType: 'json',
         data: {
-            lat: lat,
-            lon: lon
+            city: city
         },
         success: function(data) {
             $('#currentTemp').text(data.current.temp_c + "°C");
@@ -547,7 +541,7 @@ $('#dailyForecast').html("");
 dailyData.forEach((dayData, index) => {
     if(index < 2) {
         const dayHtml = `
-            <div class="col-6"> <!-- Here's the change -->
+            <div class="col-6">
                 <span class="dayName">${new Date(dayData.date).toLocaleDateString('default', { weekday: 'long' })}</span>
                 <img src="https:${dayData.day.condition.icon}" alt="Daily Weather Icon">
                 <span class="highTemp">${dayData.day.maxtemp_c}°C</span>/<span class="lowTemp">${dayData.day.mintemp_c}°C</span>
@@ -557,36 +551,6 @@ dailyData.forEach((dayData, index) => {
     }
 });
 
-            let weatherCondition = data.current.condition.text.toLowerCase();
-            let backgroundImage;
-
-            if (weatherCondition.includes('rain')) {
-            backgroundImage = 'url(/images/weather/rain.jpg)';
-            } else if (weatherCondition.includes('sunny')) {
-            backgroundImage = 'url(/images/weather/sun.jpg)';
-            } else if (weatherCondition.includes('fog')) {
-            backgroundImage = 'url(/images/weather/fog.jpg)';
-            } else if (weatherCondition.includes('mist')) {
-            backgroundImage = 'url(/images/weather/mist.jpg)';
-            } else if (weatherCondition.includes('cloudy')) {
-            backgroundImage = 'url(/images/weather/cloudy.jpg)';
-            } else if (weatherCondition.includes('thunder')) {
-            backgroundImage = 'url(/images/weather/thunder.jpg)';
-            } else if (weatherCondition.includes('overcast')) {
-            backgroundImage = 'url(/images/weather/overcast.jpg)';
-            } else if (weatherCondition.includes('light') && weatherCondition.includes('rain')) {
-            backgroundImage = 'url(/images/weather/lightrain.jpg)';
-            } else {
-            backgroundImage = 'url(/images/weather/default.jpg)';
-}
-
-          $('#weatherModal .modal-content .modal-body').css({
-    'background-image': backgroundImage,
-    'background-size': 'cover',
-    'background-position': 'center center',
-    'background-repeat': 'no-repeat'
-});
-            
             $('#weatherModal').modal('show');
         },
         error: function(error) {
@@ -595,72 +559,84 @@ dailyData.forEach((dayData, index) => {
     });
 }
 
+function getDefaultCityForCountry(countryIso) {
+    const countryCityMap = {
+        'US': 'New York City',
+        // ... Add other mappings here
+    };
+
+    return countryCityMap[countryIso] || 'Unknown City';
+}
+
 
 L.easyButton('<i class="fa-solid fa-sun" style="color: #e0d01f;"></i>', function(btn, map) {
-    let lat = map.getCenter().lat;
-    let lon = map.getCenter().lng;
-    fetchWeather(lat, lon);
+    let countryIso = $('#country').find('option:selected').data('iso2');
+    const city = getDefaultCityForCountry(countryIso);
+    fetchWeatherForCity(city);
 }, 'Get Weather Info').addTo(mymap);
 
-
-
-//Local and GMT offset easybutton and modal
-function displayTimezoneInfo(iso2) {
-    let apiUrl = `http://secure.geonames.org/countryInfo?country=${iso2}&username=ajppeters`;
-    $(".lds-dual-ring").show();
-    $(".loading-overlay").show();
+function fetchHolidaysForCountry(countryIso) {
+    const currentYear = new Date().getFullYear(); // Current year
     
     $.ajax({
-        url: apiUrl,
+        url: "/project1/php/fetchHolidays.php",
         type: 'GET',
-        dataType: 'xml',
-        success: function(data) {
-            let country = $(data).find('country');
-            let latitude = country.find('north').text();
-            let longitude = country.find('west').text();
-
-            
-            getTimezoneInfo(latitude, longitude, function(timezoneData) {
-                let offsetHours = timezoneData.gmtOffset / 3600; 
-                let prefix = offsetHours >= 0 ? "UTC+" : "UTC"; 
-                let formattedOffset = prefix + offsetHours;
-
-                $('#localTime').text(timezoneData.formatted);
-                $('#gmtOffset').text(formattedOffset); 
-                
-                $(".lds-dual-ring").hide();
-                $(".loading-overlay").hide();
-                $('#timezoneModal').modal('show');
-            });
+        data: { 
+            country: countryIso, 
+            year: currentYear 
         },
-        error: function(error) {
-            console.error("Error fetching country info:", error);
-        }
-    });
-}
-
-function getTimezoneInfo(lat, lng, callback) {
-    let apiUrl = `/php/timezone.php?lat=${lat}&lng=${lng}`;
-
-    $.ajax({
-        url: apiUrl,
-        type: 'GET',
         dataType: 'json',
         success: function(data) {
-            callback(data);
-        },
-        error: function(error) {
-            console.error("Error fetching timezone data:", error);
+    
+    
+    let holidaysHtml = '<table><tbody>'; 
+
+    // Sort data by date
+    data.sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    if (data && data.length) {
+        data.forEach(function(holiday) {
+            if (holiday.type === "PUBLIC_HOLIDAY" || holiday.type === "OBSERVANCE") {
+                let dateObj = new Date(holiday.date);
+                let formattedDate = `${dateObj.getDate()}/${dateObj.getMonth() + 1}/${dateObj.getFullYear()}`;
+
+                holidaysHtml += `
+                    <tr>
+                        <td>${holiday.name}</td> 
+                        <td>${formattedDate}</td>
+                    </tr>
+                `;
+            }
+        });
+    } else {
+        holidaysHtml += '<tr><td colspan="2">No holidays available for this country.</td></tr>';
+    }
+    holidaysHtml += '</tbody></table>';
+    
+    $('#holidaysModalBody').html(holidaysHtml);
+    $('#holidaysModal').modal('show');
+}
+
+
+
+
+
+,
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.error("AJAX Error:", textStatus, errorThrown, jqXHR.responseText);
         }
     });
 }
 
-L.easyButton('<i class="fa-regular fa-clock" style="color: #5188e6;"></i>', function(btn, map) {
-    let iso2 = $('#country').find('option:selected').data('iso2');
-    if (iso2) {
-        displayTimezoneInfo(iso2);
+L.easyButton('<i class="fas fa-calendar-alt" style="color: #3a76df;"></i>', function(btn, map) {
+    let countryIso = window.selectedCountryISO2; // Use your global ISO variable name if it's different
+    if (countryIso) {
+        fetchHolidaysForCountry(countryIso);
     }
-}, 'Get Timezone Info').addTo(mymap);
+}, 'Get Holidays').addTo(mymap);
+
+
+
 
 //Overlay for the markers to be enabled/ disabled in controls
 let overlayMarkers = {
