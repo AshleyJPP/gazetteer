@@ -40,7 +40,7 @@ if (!isset($_GET['countryCode']) || empty($_GET['countryCode'])) {
 // Fetch conversion rate using the RapidAPI currency converter
 $curl = curl_init();
 curl_setopt_array($curl, [
-    CURLOPT_URL => "https://currency-converter-by-api-ninjas.p.rapidapi.com/v1/convertcurrency?have=GBP&want=" . $currencyCode . "&amount=" . $_GET['amount'],
+    CURLOPT_URL => "https://currency-converter-by-api-ninjas.p.rapidapi.com/v1/convertcurrency?have=USD&want=" . $currencyCode . "&amount=" . $_GET['amount'],
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_FOLLOWLOCATION => true,
     CURLOPT_ENCODING => "",
