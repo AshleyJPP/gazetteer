@@ -1,7 +1,9 @@
 //Global Variables
 selectedCountryISO2 = $(this).find(':selected').data('iso2');
+let highlightedCountryLayer;
 var markers = L.markerClusterGroup();
 
+//Loader for app start
 document.addEventListener("DOMContentLoaded", function() {
     const initialLoader = document.querySelector('#initialLoader');
     if (initialLoader) {
@@ -16,19 +18,18 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 
 
-
 //Custom marker icons
 var cityIcon = L.ExtraMarkers.icon({
     prefix: 'fa',
-  icon: 'fa-city',
-  markerColor: 'green',
-  shape: 'square'
+    icon: 'fa-city',
+    markerColor: 'green',
+    shape: 'square'
 });
 
 
 var airportIcon = L.ExtraMarkers.icon({
     icon: 'fa-plane',
-    markerColor: 'blue', 
+    markerColor: 'blue',
     shape: 'circle',
     prefix: 'fa',
     iconColor: 'black'
@@ -53,7 +54,7 @@ var street = L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y
         tileSize: 512,
         zoomOffset: -1,
         accessToken: 'pk.eyJ1IjoiYXNobGV5anBwIiwiYSI6ImNsbGFxbXk5dzAwM3czam1xdTVmMmM1NjIifQ.Gn2M_HtCnWnzkuPduztcsg'
-}),
+    }),
     satellite = L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
         attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
         maxZoom: 15,
@@ -62,82 +63,92 @@ var street = L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y
         tileSize: 512,
         zoomOffset: -1,
         accessToken: 'pk.eyJ1IjoiYXNobGV5anBwIiwiYSI6ImNsbGFxbXk5dzAwM3czam1xdTVmMmM1NjIifQ.Gn2M_HtCnWnzkuPduztcsg'
-})
+    })
 
 var mymap = L.map('map', {
-    layers: [street] 
+    layers: [street]
 });
 
 var baseLayers = {
-	"Street Map": street,
-	"Satellite Map": satellite
+    "Street Map": street,
+    "Satellite Map": satellite
 };
 
 //Map pin for users location
 var pericon = L.icon({
     iconUrl: '/project1/images/location.png',
-    iconSize: [32,32],
-    iconAnchor:  [20,40]
+    iconSize: [32, 32],
+    iconAnchor: [20, 40]
 });
 
 $(".lds-dual-ring").hide();
 
 //Navigator geolocation to get users current position, and highlight users countries borders
 $(document).ready(function() {
-    navigator.geolocation.getCurrentPosition( geolocationCallback );  
+    navigator.geolocation.getCurrentPosition(geolocationCallback);
 });
 
+if ("geolocation" in navigator) {
+
+    navigator.geolocation.getCurrentPosition(geolocationCallback, function(error) {
+        console.error("Error occurred: ", error.message);
+    });
+
+} else {
+    console.error("Geolocation API not supported by this browser.");
+}
+
 function geolocationCallback(position) {
-    
+
     var lat = position.coords.latitude;
     var lng = position.coords.longitude;
     var latlng = new L.LatLng(lat, lng);
- 
+
     mymap = mymap.setView(latlng, 7);
 
-    L.marker(latlng, {title: 'Your Location', icon: pericon}).addTo(mymap);
+    L.marker(latlng, {
+        title: 'Your Location',
+        icon: pericon
+    }).addTo(mymap);
 
-     $.get(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`, function(data) {
+    $.get(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`, function(data) {
         if (data && data.address && data.address.country_code) {
             selectedCountryISO2 = data.address.country_code.toUpperCase();
-            let userISO3Code = $('#country option[data-iso2="'+ selectedCountryISO2 +'"]').val();
+            let userISO3Code = $('#country option[data-iso2="' + selectedCountryISO2 + '"]').val();
 
-            if(userISO3Code) {
+            if (userISO3Code) {
                 $('#country').val(userISO3Code).change();
             }
         }
     });
 }
 
-//To populate the dropdown with country list
+// Fetch country data (ISO2 codes and names)
 $(document).ready(function() {
     $.ajax({
-        url: "/project1/php/select.php",
-        type: 'POST',
+        url: "/project1/php/getCountryData.php",
+        type: 'GET',
         dataType: 'json',
         success: function(result) {
-            $.each(result.data, function(index) {
+            $.each(result, function(index) {
                 $('#country').append($("<option>", {
-                    value: result.data[index].iso3,
-                    text: result.data[index].name,
-                    "data-iso2": result.data[index].iso2
+                    value: result[index].iso2,
+                    text: result[index].name,
+                    "data-iso2": result[index].iso2
                 }));
             });
         }
     });
 });
 
-let countryBorders;
 
-$.getJSON('/project1/json/countryBorders.geo.json', function(data) {
-    countryBorders = data;
-});
 
 //On change function
 $('#country').change(function() {
     let selectedCountryISO3 = $(this).val();
     selectedCountryISO2 = $(this).find(':selected').data('iso2');
     let selectedCountryName = $(this).find(':selected').text();
+    $('#gbpAmount').val(1);
     highlightCountry(selectedCountryISO3);
     if (selectedCountryISO2) {
         fetchCitiesAndAddMarkers(selectedCountryISO2);
@@ -146,27 +157,36 @@ $('#country').change(function() {
     }
 });
 
+let countryBorders;
 
-//To highlight country borders
-let highlightedCountryLayer;
+$.getJSON('/project1/json/countryBorders.geo.json', function(data) {
+    countryBorders = data;
+});
 
-function highlightCountry(isoCode) {
-    if (highlightedCountryLayer) {
-        mymap.removeLayer(highlightedCountryLayer);
-    }
-
-    let countryData = countryBorders.features.find(feature => feature.properties.iso_a3 === isoCode);
-    
-    if (countryData) {
-        highlightedCountryLayer = L.geoJSON(countryData, {
-            style: {
-                color: 'limegreen',  
-                weight: 4,
-                opacity: 0.9
+// Function to fetch and highlight country feature based on ISO2 code
+function highlightCountry(iso2Code) {
+    $.ajax({
+        url: "/project1/php/getCountryFeature.php?iso2=" + iso2Code,
+        type: 'GET',
+        dataType: 'json',
+        success: function(result) {
+            if (highlightedCountryLayer) {
+                mymap.removeLayer(highlightedCountryLayer);
             }
-        }).addTo(mymap);
-        mymap.fitBounds(highlightedCountryLayer.getBounds());
-    }
+
+            highlightedCountryLayer = L.geoJSON(result, {
+                style: {
+                    color: 'limegreen',
+                    weight: 4,
+                    opacity: 0.9
+                }
+            }).addTo(mymap);
+            mymap.fitBounds(highlightedCountryLayer.getBounds());
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.error("AJAX Error:", textStatus, errorThrown, jqXHR.responseText);
+        }
+    });
 }
 
 //Country Information easybutton and modal, including wikipedia article summary
@@ -202,7 +222,7 @@ function getCountryInfo(iso2) {
                     let entry = $(wikiData).find('entry:first');
                     if (entry) {
                         $('#wikiSummary').text(entry.find('summary').text());
-                        $('#wikiLink').attr('href', `https://${entry.find('wikipediaUrl').text()}`).text("Read the full article");
+                        $('#wikiLink').attr('href', entry.find('wikipediaUrl').text()).text("Read the full article");
                         $('#wikiLink').show();
                     } else {
                         $('#wikiSummary').text("No Wikipedia summary available for this country.");
@@ -251,7 +271,7 @@ L.easyButton('<i class="fas fa-info-circle" style="color: #3a76df;"></i>', funct
 
 
 
-$('#countryInfoModal').on('hidden.bs.modal', function () {
+$('#countryInfoModal').on('hidden.bs.modal', function() {
     $('.modal-backdrop-show').remove();
 });
 
@@ -260,11 +280,11 @@ $(document).ready(function() {
     $('#closeModalBtn').on('click', function() {
         $('#countryInfoModal').modal('hide');
     });
-    
+
     $('#closeModalBtn2').on('click', function() {
         $('#currencyModal').modal('hide');
     });
-    
+
     $('#closeModalBtn3').on('click', function() {
         $('#news-modal').modal('hide');
     });
@@ -279,10 +299,12 @@ function showCurrencyModal(data) {
     $('#currencyModal').modal('show');
 }
 
+let conversionTimeout;
+
 function getCurrencyConversion(amount) {
-    
+
     let countryCode = $('#country').find('option:selected').data('iso2');
-    
+
     if (countryCode && amount) {
         $(".lds-dual-ring").show();
         $(".loading-overlay").show();
@@ -323,9 +345,16 @@ $(document).ready(function() {
     let $decreaseAmount = $('#decreaseAmount');
     let $increaseAmount = $('#increaseAmount');
 
+    function triggerConversionWithDelay(amount) {
+        clearTimeout(conversionTimeout);
+        conversionTimeout = setTimeout(function() {
+            getCurrencyConversion(amount);
+        }, 500);
+    }
+
     $decreaseAmount.click(function() {
         let currentAmount = parseFloat($gbpAmount.val());
-        if (currentAmount > 0) {
+        if (currentAmount > 1) {
             $gbpAmount.val(currentAmount - 1);
             getCurrencyConversion(currentAmount - 1);
         }
@@ -334,13 +363,13 @@ $(document).ready(function() {
     $increaseAmount.click(function() {
         let currentAmount = parseFloat($gbpAmount.val());
         $gbpAmount.val(currentAmount + 1);
-        getCurrencyConversion(currentAmount + 1);
+        triggerConversionWithDelay(currentAmount + 1);
     });
 
     $gbpAmount.change(function() {
         let currentAmount = parseFloat($gbpAmount.val());
-        if (currentAmount >= 0) { 
-            getCurrencyConversion(currentAmount);
+        if (currentAmount >= 0) {
+            triggerConversionWithDelay(currentAmount);
         }
     });
 });
@@ -348,7 +377,7 @@ $(document).ready(function() {
 L.easyButton('<i class="fas fa-coins" style="color: #b27724;"></i>', function(btn, map) {
     let currentAmount = parseFloat($('#gbpAmount').val());
     if (currentAmount >= 0) {
-        getCurrencyConversion(currentAmount); 
+        getCurrencyConversion(currentAmount);
     }
 }, 'Currency Converter').addTo(mymap);
 
@@ -358,17 +387,21 @@ let selectedCountryName = '';
 let cityMarkers = L.layerGroup().addTo(mymap);
 
 function fetchCitiesAndAddMarkers(countryISO2) {
-        $.ajax({
+    $.ajax({
         url: "/project1/php/fetchCities.php",
         type: "GET",
-        data: { countryISO2: countryISO2 },
+        data: {
+            countryISO2: countryISO2
+        },
         dataType: "json",
         success: function(data) {
             markers.clearLayers();
-            if(data.data && Array.isArray(data.data)) {
+            if (data.data && Array.isArray(data.data)) {
                 data.data.forEach(city => {
-                    if (!city.name.startsWith('City of ') && !city.name.endsWith(' County')) { 
-                        let marker = L.marker([city.latitude, city.longitude], { icon: cityIcon })
+                    if (!city.name.startsWith('City of ') && !city.name.endsWith(' County')) {
+                        let marker = L.marker([city.latitude, city.longitude], {
+                                icon: cityIcon
+                            })
                             .bindPopup(city.name)
                             .bindTooltip(city.name, {
                                 permanent: false,
@@ -397,14 +430,18 @@ function fetchAirportsAndAddMarkers(countryISO2) {
     $.ajax({
         url: "/project1/php/fetchAirports.php",
         type: "GET",
-        data: { countryISO2: countryISO2 },
+        data: {
+            countryISO2: countryISO2
+        },
         dataType: "json",
         success: function(data) {
             airportMarkers.clearLayers();
 
-            if(data.geonames && Array.isArray(data.geonames)) {
+            if (data.geonames && Array.isArray(data.geonames)) {
                 data.geonames.forEach(airport => {
-                    let marker = L.marker([airport.lat, airport.lng], { icon: airportIcon })
+                    let marker = L.marker([airport.lat, airport.lng], {
+                            icon: airportIcon
+                        })
                         .bindPopup(airport.name)
                         .bindTooltip(airport.name, {
                             permanent: false,
@@ -424,32 +461,56 @@ function fetchAirportsAndAddMarkers(countryISO2) {
     });
 }
 
+
+
+
 //Adding earthquakes to the map as markers
 let earthquakeMarkers = L.markerClusterGroup();
 mymap.addLayer(earthquakeMarkers);
+
+
+function formatEarthquakeDate(dateString) {
+    const options = {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+    };
+    let date = new Date(dateString);
+    return date.toLocaleDateString('en-US', options);
+}
 
 function fetchEarthquakesForCountry(countryISO2) {
     $.ajax({
         url: "/project1/php/fetchEarthquakes.php",
         type: "GET",
-        data: { countryISO2: countryISO2 },
+        data: {
+            countryISO2: countryISO2
+        },
         dataType: "json",
         success: function(data) {
             earthquakeMarkers.clearLayers();
-            if(data && Array.isArray(data.earthquakes)) {
+            if (data && Array.isArray(data.earthquakes)) {
                 data.earthquakes.forEach(earthquake => {
                     const latlng = [earthquake.lat, earthquake.lng];
-                    const datetime = earthquake.datetime;
+
+                    const formattedDate = formatEarthquakeDate(earthquake.datetime);
+                    const magnitude = earthquake.magnitude;
 
                     const popupContent = `
-                        <strong>Earthquake Details:</strong><br>
-                        Magnitude: ${earthquake.magnitude}<br>
-                        Date/Time: ${datetime}
-                    `;
+    <div class="earthquake-popup">
+        <strong>Magnitude:</strong> ${magnitude} <br>
+        <strong>Date/ Time:</strong> ${formattedDate}
+    </div>
+`;
 
-                    
-                    let marker = L.marker(latlng, { icon: earthquakeIcon })
-    .bindPopup(popupContent);
+                    let marker = L.marker(latlng, {
+                            icon: earthquakeIcon
+                        })
+                        .bindPopup(popupContent);
 
                     earthquakeMarkers.addLayer(marker);
                 });
@@ -466,20 +527,23 @@ function fetchEarthquakesForCountry(countryISO2) {
 }
 
 
+
 function fetchNewsForCountry(countryIso) {
-    
+
     $.ajax({
         url: "/project1/php/fetchNews.php",
         type: 'GET',
-        data: { country: countryIso },
+        data: {
+            country: countryIso
+        },
         dataType: 'json',
         success: function(data) {
             let newsHtml = '';
             if (data.results && data.results.length) {
-    data.results.slice(0, 5).forEach(function(article) {
-        const imageUrl = article.image_url || "path/to/your/placeholder-image.jpg";
+                data.results.slice(0, 5).forEach(function(article) {
+                    const imageUrl = article.image_url || "path/to/your/placeholder-image.jpg";
 
-        newsHtml += `
+                    newsHtml += `
             <div class="news-item d-flex align-items-start">
                 ${article.image_url ? `<img src="${imageUrl}" alt="${article.title}" class="news-thumbnail me-3">` : ''}
                 <div>
@@ -488,14 +552,14 @@ function fetchNewsForCountry(countryIso) {
                 </div>
             </div>
         `;
-    });
-} else {
-    newsHtml = '<p>No news articles available.</p>';
-}
+                });
+            } else {
+                newsHtml = '<p>No news articles available.</p>';
+            }
             $('#newsModalBody').html(newsHtml);
             $('#newsModal').modal('show');
             $(".lds-dual-ring").hide();
-            },
+        },
         error: function(error) {
             console.error("Error fetching news data:", error);
         }
@@ -508,48 +572,46 @@ L.easyButton('<i class="fas fa-newspaper" style="color: #3a76df;"></i>', functio
     if (countryIso) {
         fetchNewsForCountry(countryIso);
     }
-    }, 'Get News').addTo(mymap);
+}, 'Get News').addTo(mymap);
 
 
-//Selected country weather forecast easybutton and modal
-function fetchWeatherForCity(city) {
+function fetchWeather(lat, lon) {
     $.ajax({
-        url: '/project1/php/fetchWeatherByCity.php',
+        url: '/project1/php/fetchWeather.php',
         type: 'GET',
         dataType: 'json',
         data: {
-            city: city
+            lat: lat,
+            lon: lon
         },
         success: function(data) {
-            $('#currentTemp').text(data.current.temp_c + "°C");
-            $('#weatherDescription').text(data.current.condition.text);
-            $('#currentWeatherIcon').attr('src', 'https:' + data.current.condition.icon);
-
-            const hourlyData = data.forecast.forecastday[0].hour;
-
-            ['hourlyForecastBlock1', 'hourlyForecastBlock2', 'hourlyForecastBlock3'].forEach((blockId, index) => {
-                const hourHtml = `
-                    <span class="time">${hourlyData[index].time.split(' ')[1]}</span>
-                    <img src="https:${hourlyData[index].condition.icon}" alt="Hourly Weather Icon">
-                    <span class="hourTemp">${hourlyData[index].temp_c}°C</span>
-                `;
-                $(`#${blockId}`).html(hourHtml);
-            });
+            $('#weatherLocation').text(data.location.name + ', ' + data.location.country);
+            $('#weatherCondition').text(data.current.condition.text);
+            $('#weatherIcon').attr('src', 'https:' + data.current.condition.icon);
+            $('#weatherTemperature').text(data.current.temp_c + "°C");
 
             const dailyData = data.forecast.forecastday;
-$('#dailyForecast').html("");
-dailyData.forEach((dayData, index) => {
-    if(index < 2) {
-        const dayHtml = `
-            <div class="col-6">
-                <span class="dayName">${new Date(dayData.date).toLocaleDateString('default', { weekday: 'long' })}</span>
-                <img src="https:${dayData.day.condition.icon}" alt="Daily Weather Icon">
-                <span class="highTemp">${dayData.day.maxtemp_c}°C</span>/<span class="lowTemp">${dayData.day.mintemp_c}°C</span>
-            </div>
-        `;
-        $('#dailyForecast').append(dayHtml);
-    }
-});
+
+            for (let i = 0; i < 3; i++) {
+                const dayData = dailyData[i];
+                const dayName = new Date(dayData.date).toLocaleDateString('default', {
+                    weekday: 'long'
+                });
+                const dayIcon = 'https:' + dayData.day.condition.icon;
+                const maxTemp = dayData.day.maxtemp_c + "°C";
+                const minTemp = dayData.day.mintemp_c + "°C";
+
+
+                const dayHtml = `
+                    <div class="day-forecast">
+                        <p class="day-name">${dayName}</p>
+                        <img class="day-icon" src="${dayIcon}" alt="Daily Weather Icon">
+                        <p class="day-temp">${maxTemp} / ${minTemp}</p>
+                    </div>
+                `;
+
+                $(`#weatherDayForecast${i}`).html(dayHtml);
+            }
 
             $('#weatherModal').modal('show');
         },
@@ -559,77 +621,63 @@ dailyData.forEach((dayData, index) => {
     });
 }
 
-function getDefaultCityForCountry(countryIso) {
-    const countryCityMap = {
-        'US': 'New York City',
-        // ... Add other mappings here
-    };
-
-    return countryCityMap[countryIso] || 'Unknown City';
-}
-
-
 L.easyButton('<i class="fa-solid fa-sun" style="color: #e0d01f;"></i>', function(btn, map) {
-    let countryIso = $('#country').find('option:selected').data('iso2');
-    const city = getDefaultCityForCountry(countryIso);
-    fetchWeatherForCity(city);
+    let lat = map.getCenter().lat;
+    let lon = map.getCenter().lng;
+    fetchWeather(lat, lon);
 }, 'Get Weather Info').addTo(mymap);
+
+
+
 
 function fetchHolidaysForCountry(countryIso) {
     const currentYear = new Date().getFullYear(); // Current year
-    
+
     $.ajax({
         url: "/project1/php/fetchHolidays.php",
         type: 'GET',
-        data: { 
-            country: countryIso, 
-            year: currentYear 
+        data: {
+            country: countryIso,
+            year: currentYear
         },
         dataType: 'json',
         success: function(data) {
-    
-    
-    let holidaysHtml = '<table><tbody>'; 
+            let holidaysHtml = '';
+            const filteredHolidays = data.filter(holiday => {
+                return holiday.type === "PUBLIC_HOLIDAY" || holiday.type === "OBSERVANCE";
+            });
+            filteredHolidays.sort((a, b) => new Date(a.date) - new Date(b.date));
+            const holidaysToShow = filteredHolidays.slice(0, 15);
 
-    // Sort data by date
-    data.sort((a, b) => new Date(a.date) - new Date(b.date));
-    
-    if (data && data.length) {
-        data.forEach(function(holiday) {
-            if (holiday.type === "PUBLIC_HOLIDAY" || holiday.type === "OBSERVANCE") {
-                let dateObj = new Date(holiday.date);
-                let formattedDate = `${dateObj.getDate()}/${dateObj.getMonth() + 1}/${dateObj.getFullYear()}`;
+            if (holidaysToShow && holidaysToShow.length) {
+                holidaysToShow.forEach(function(holiday) {
+                    let dateObj = new Date(holiday.date);
+                    let formattedDate = `${dateObj.getDate()}/${dateObj.getMonth() + 1}/${dateObj.getFullYear()}`;
 
-                holidaysHtml += `
-                    <tr>
-                        <td>${holiday.name}</td> 
-                        <td>${formattedDate}</td>
-                    </tr>
-                `;
+                    holidaysHtml += `
+                        <div class="row mb-2">
+                            <div class="col-8">${holiday.name}</div>
+                            <div class="col-4 text-end">${formattedDate}</div>
+                        </div>
+                    `;
+                });
+            } else {
+                holidaysHtml = '<div class="text-center">No holidays available for this country.</div>';
             }
-        });
-    } else {
-        holidaysHtml += '<tr><td colspan="2">No holidays available for this country.</td></tr>';
-    }
-    holidaysHtml += '</tbody></table>';
-    
-    $('#holidaysModalBody').html(holidaysHtml);
-    $('#holidaysModal').modal('show');
-}
 
-
-
-
-
-,
+            $('#holidaysModalBody').html(holidaysHtml);
+            $('#holidaysModal').modal('show');
+        },
         error: function(jqXHR, textStatus, errorThrown) {
             console.error("AJAX Error:", textStatus, errorThrown, jqXHR.responseText);
         }
     });
 }
 
+
+
 L.easyButton('<i class="fas fa-calendar-alt" style="color: #3a76df;"></i>', function(btn, map) {
-    let countryIso = window.selectedCountryISO2; // Use your global ISO variable name if it's different
+    let countryIso = window.selectedCountryISO2;
     if (countryIso) {
         fetchHolidaysForCountry(countryIso);
     }
