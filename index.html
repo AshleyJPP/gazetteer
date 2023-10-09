@@ -20,7 +20,7 @@
     <link rel="stylesheet" href="/project1/packages/easybutton/easy-button.css">
     
     <!--FontAwesome CSS-->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="/project1/packages/fontawesome/css/all.min.css">
     
     <!--Markercluster CSS-->
     <link rel="stylesheet" href="/project1/packages/Leaflet_markercluster/dist/MarkerCluster.css" />
@@ -152,10 +152,10 @@
     <div class="modal fade" id="currencyModal" tabindex="-1" role="dialog" aria-labelledby="currencyModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
         <div class="modal-content">
-          <div class="modal-header bg-success bg-gradient text-white">
-            <h5 class="modal-title" id="currencyModalLabel">Currency Conversion</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
+          <div class="modal-header bg-success bg-gradient text-white d-flex justify-content-between">
+    <h5 class="modal-title mx-auto" id="currencyModalLabel">Currency Conversion</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
           <div class="modal-body">
             <div class="text-center mb-4">
               <span>Amount in USD</span>
@@ -176,16 +176,21 @@
       </div>
     </div>
     
-    <!-- News Modal -->
-    <div class="modal fade" id="newsModal" tabindex="-1" aria-labelledby="newsModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+
+<!-- News Modal -->
+<div class="modal fade" id="newsModal" tabindex="-1" aria-labelledby="newsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content shadow">
-          <div class="modal-header bg-success bg-gradient text-white">
-            <h5 class="modal-title">
-              <i class="fa-solid fa-newspaper fa-xl me-2"></i>Latest News
-            </h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
+            <div class="modal-header bg-success bg-gradient text-white">
+                <div class="modal-header-container">
+                    <div class="centered-content">
+                        <h5 class="modal-title">
+                            <i class="fa-solid fa-newspaper fa-xl me-2"></i>Latest News
+                        </h5>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
           <div class="modal-body" id="newsModalBody"></div>
           <div class="modal-footer">
             <button type="button" class="btn btn-outline-success btn-sm" data-bs-dismiss="modal">Close</button>
@@ -195,14 +200,18 @@
     </div>
     
     <!-- Weather Modal -->
-    <div id="weatherModal" class="modal fade" tabindex="-1" aria-labelledby="weatherModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
+<div id="weatherModal" class="modal fade" tabindex="-1" aria-labelledby="weatherModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-          <div class="modal-header bg-primary text-white custom-header">
-            <h5 class="modal-title" id="weatherModalLabel">Weather Forecast for <span id="weatherLocation">...</span>
-            </h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
+            <div class="modal-header bg-primary text-white custom-header">
+                <div class="modal-header-container">
+                    <div class="centered-content">
+                        <h5 class="modal-title" id="weatherModalLabel">Weather Forecast for <span id="weatherLocation">...</span>
+                        </h5>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
           <div class="modal-body">
             <div class="current-weather">
               <div class="row">
@@ -231,15 +240,19 @@
     </div>
     
     <!--Holidays Modal-->
-    <div id="holidaysModal" class="modal" data-bs-backdrop="false" tabindex="-1">
-      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+<div id="holidaysModal" class="modal" data-bs-backdrop="false" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content shadow">
-          <div class="modal-header bg-success bg-gradient text-white">
-            <h5 class="modal-title">
-              <i class="fas fa-calendar-alt fa-xl me-2"></i>Public Holidays
-            </h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
+            <div class="modal-header bg-success bg-gradient text-white">
+                <div class="modal-header-container">
+                    <div class="centered-content">
+                        <h5 class="modal-title">
+                            <i class="fas fa-calendar-alt fa-xl me-2"></i>Public Holidays
+                        </h5>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
           <div class="modal-body" id="holidaysModalBody"></div>
           <div class="modal-footer">
             <button type="button" class="btn btn-outline-success btn-sm" data-bs-dismiss="modal">Close</button>
