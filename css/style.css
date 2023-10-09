@@ -57,20 +57,28 @@ height: 100%;
     text-align: center;
 }
 
+.modal-header::before {
+    content: "";
+    width: 40px;
+    display: inline-block;
+}
+
 .modal-header {
     display: flex;
-    justify-content: center; 
-    align-items: center;
-    font-weight: 700;
+    justify-content: space-between; 
+}
+
+.centered-modal-title {
+    order: 1;
+    margin: 0 auto;
 }
 
 .modal-title {
-    flex: 1; 
-    text-align: center;
+    margin-bottom: 0;
+    line-height: var(--bs-modal-title-line-height);
 }
 
 .modal-header .modal-title {
-    order: 1;  
     font-weight: 700;
 }
 
@@ -95,7 +103,7 @@ height: 100%;
 
 
 #news-modal #newsList h2 {
-    font-size: 16px;
+    font-size: 12px;
     text-align: center;
 }
 
@@ -253,6 +261,7 @@ height: 100%;
 }
 
 .news-headline {
+    font-size: 14px;
     font-weight: normal;
     margin-bottom: 10px;
 }
@@ -381,4 +390,8 @@ height: 100%;
     text-align: center;
 }
 
+.centered-item {
+    text-align: center;
+    width: 100%;
+}
 
