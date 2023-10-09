@@ -1,7 +1,24 @@
 //Global Variables
 selectedCountryISO2 = $(this).find(':selected').data('iso2');
 let highlightedCountryLayer;
-var markers = L.markerClusterGroup();
+var clusterConfig = {
+    spiderLegPolylineOptions: {
+        weight: 2,
+        color: 'blue',
+        opacity: 0.5
+    },
+    polygonOptions: {
+        color: 'blue',
+        weight: 3,
+        opacity: 0.5,
+        fillColor: 'limegreen',
+        fillOpacity: 0.2
+    }
+};
+
+var markers = L.markerClusterGroup(clusterConfig);
+var airportMarkers = L.markerClusterGroup(clusterConfig);
+let earthquakeMarkers = L.markerClusterGroup(clusterConfig);
 
 //Loader for app start
 document.addEventListener("DOMContentLoaded", function() {
@@ -32,7 +49,7 @@ var airportIcon = L.ExtraMarkers.icon({
     markerColor: 'blue',
     shape: 'circle',
     prefix: 'fa',
-    iconColor: 'black'
+    iconColor: 'white'
 });
 
 
@@ -424,7 +441,6 @@ function fetchCitiesAndAddMarkers(countryISO2) {
 
 
 //Adding airports as markers to the map
-var airportMarkers = L.markerClusterGroup();
 
 function fetchAirportsAndAddMarkers(countryISO2) {
     $.ajax({
@@ -465,7 +481,6 @@ function fetchAirportsAndAddMarkers(countryISO2) {
 
 
 //Adding earthquakes to the map as markers
-let earthquakeMarkers = L.markerClusterGroup();
 mymap.addLayer(earthquakeMarkers);
 
 
@@ -500,17 +515,19 @@ function fetchEarthquakesForCountry(countryISO2) {
                     const formattedDate = formatEarthquakeDate(earthquake.datetime);
                     const magnitude = earthquake.magnitude;
 
-                    const popupContent = `
-    <div class="earthquake-popup">
-        <strong>Magnitude:</strong> ${magnitude} <br>
-        <strong>Date/ Time:</strong> ${formattedDate}
-    </div>
+                    const tooltipContent = `
+<div class="earthquake-tooltip">
+    <div class="centered-item"><strong>Earthquake</strong></div>
+    <div class="centered-item"><strong>Magnitude:</strong> ${magnitude}</div>
+    <div class="centered-item"><strong>Date/ Time:</strong> ${formattedDate}</div>
+</div>
 `;
+
 
                     let marker = L.marker(latlng, {
                             icon: earthquakeIcon
                         })
-                        .bindPopup(popupContent);
+                        .bindTooltip(tooltipContent, {permanent: false});
 
                     earthquakeMarkers.addLayer(marker);
                 });
@@ -525,6 +542,7 @@ function fetchEarthquakesForCountry(countryISO2) {
         }
     });
 }
+
 
 
 
@@ -544,14 +562,14 @@ function fetchNewsForCountry(countryIso) {
                     const imageUrl = article.image_url || "path/to/your/placeholder-image.jpg";
 
                     newsHtml += `
-            <div class="news-item d-flex align-items-start">
-                ${article.image_url ? `<img src="${imageUrl}" alt="${article.title}" class="news-thumbnail me-3">` : ''}
-                <div>
-                    <h4 class="news-headline">${article.title}</h4>
-                    <a href="${article.link}" target="_blank" class="view-link">View full article</a>
-                </div>
-            </div>
-        `;
+    <div class="news-item d-flex align-items-start">
+        ${article.image_url ? `<img src="${imageUrl}" alt="${article.title}" class="news-thumbnail me-3">` : ''}
+        <div>
+            <h4 class="news-headline">${article.title}</h4>
+            <a href="${article.link}" target="_blank" class="view-link">${article.source_id || 'Unknown Publication'}</a>
+        </div>
+    </div>
+`;
                 });
             } else {
                 newsHtml = '<p>No news articles available.</p>';
